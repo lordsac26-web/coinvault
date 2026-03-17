@@ -1,183 +1,174 @@
-// CoinVault localStorage helpers
+// CoinVault data layer — Base44 entities
+import { base44 } from '@/api/base44Client';
 
-const KEYS = {
-  COLLECTIONS: 'coinvault_collections',
-  COINS: 'coinvault_coins',
-  SETTINGS: 'coinvault_settings',
+// ── Collections ──
+
+export const getCollections = async () => {
+  return await base44.entities.Collection.list('-created_date');
 };
 
-export const getSettings = () => {
-  try {
-    return JSON.parse(localStorage.getItem(KEYS.SETTINGS)) || {
-      currency: 'USD',
-      defaultCountry: '',
-      aiAutoEnrich: true,
-      priceAutoRefresh: false,
-    };
-  } catch { return { currency: 'USD', defaultCountry: '', aiAutoEnrich: true, priceAutoRefresh: false }; }
-};
-
-export const saveSettings = (settings) => {
-  localStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
-};
-
-export const getCollections = () => {
-  try {
-    return JSON.parse(localStorage.getItem(KEYS.COLLECTIONS)) || [];
-  } catch { return []; }
-};
-
-export const saveCollections = (collections) => {
-  localStorage.setItem(KEYS.COLLECTIONS, JSON.stringify(collections));
-};
-
-export const createCollection = (data) => {
-  const collections = getCollections();
-  const newCollection = {
-    id: `col_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+export const createCollection = async (data) => {
+  return await base44.entities.Collection.create({
     name: data.name,
     description: data.description || '',
     type: data.type || 'Custom',
-    targetGoal: data.targetGoal || '',
-    coverImage: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  collections.push(newCollection);
-  saveCollections(collections);
-  return newCollection;
+    target_goal: data.targetGoal || data.target_goal || '',
+    cover_image: data.cover_image || null,
+  });
 };
 
-export const updateCollection = (id, updates) => {
-  const collections = getCollections();
-  const idx = collections.findIndex(c => c.id === id);
-  if (idx !== -1) {
-    collections[idx] = { ...collections[idx], ...updates, updatedAt: new Date().toISOString() };
-    saveCollections(collections);
-    return collections[idx];
+export const updateCollection = async (id, updates) => {
+  return await base44.entities.Collection.update(id, updates);
+};
+
+export const deleteCollection = async (id) => {
+  // Delete all coins in this collection first
+  const coins = await getCoinsByCollection(id);
+  for (const coin of coins) {
+    await base44.entities.Coin.delete(coin.id);
   }
-  return null;
+  await base44.entities.Collection.delete(id);
 };
 
-export const deleteCollection = (id) => {
-  const collections = getCollections().filter(c => c.id !== id);
-  saveCollections(collections);
-  // Also delete all coins in this collection
-  const coins = getCoins().filter(c => c.collectionId !== id);
-  saveCoins(coins);
+// ── Coins ──
+
+export const getCoins = async () => {
+  return await base44.entities.Coin.list('-created_date');
 };
 
-export const getCoins = () => {
-  try {
-    return JSON.parse(localStorage.getItem(KEYS.COINS)) || [];
-  } catch { return []; }
+export const getCoinsByCollection = async (collectionId) => {
+  return await base44.entities.Coin.filter({ collection_id: collectionId }, '-created_date');
 };
 
-export const saveCoins = (coins) => {
-  localStorage.setItem(KEYS.COINS, JSON.stringify(coins));
+export const getCoinById = async (id) => {
+  const coins = await base44.entities.Coin.filter({ id });
+  return coins[0] || null;
 };
 
-export const getCoinsByCollection = (collectionId) => {
-  return getCoins().filter(c => c.collectionId === collectionId);
-};
-
-export const getCoinById = (id) => {
-  return getCoins().find(c => c.id === id) || null;
-};
-
-export const createCoin = (data) => {
-  const coins = getCoins();
-  // Check if this is the first coin in the collection BEFORE adding
-  const existingCoins = getCoinsByCollection(data.collectionId);
+export const createCoin = async (data) => {
+  // Check if first coin in collection before creating
+  const existingCoins = await getCoinsByCollection(data.collectionId || data.collection_id);
   const isFirstCoin = existingCoins.length === 0;
 
-  const newCoin = {
-    id: `coin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    ...data,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  coins.push(newCoin);
-  saveCoins(coins);
+  const coin = await base44.entities.Coin.create({
+    collection_id: data.collectionId || data.collection_id,
+    country: data.country || '',
+    denomination: data.denomination || '',
+    year: data.year || '',
+    year_unknown: data.yearUnknown || data.year_unknown || false,
+    mint_mark: data.mintMark || data.mint_mark || 'None',
+    coin_series: data.coinSeries || data.coin_series || '',
+    composition: data.composition || '',
+    diameter: data.diameter || '',
+    weight: data.weight || '',
+    user_grade: data.userGrade || data.user_grade || '',
+    obverse_image: data.obverseImage || data.obverse_image || null,
+    reverse_image: data.reverseImage || data.reverse_image || null,
+    purchase_price: data.purchasePrice || data.purchase_price || '',
+    purchase_date: data.purchaseDate || data.purchase_date || '',
+    where_acquired: data.whereAcquired || data.where_acquired || 'Dealer',
+    condition_notes: data.conditionNotes || data.condition_notes || '',
+    personal_notes: data.personalNotes || data.personal_notes || '',
+    storage_location: data.storageLocation || data.storage_location || '',
+    tags: data.tags || [],
+    ai_grade: data.aiGrade || data.ai_grade || null,
+    enrichment: data.enrichment || null,
+    market_value: data.market_value || null,
+  });
 
   // Update collection cover if first coin with an image
-  if (isFirstCoin && data.obverseImage) {
-    updateCollection(data.collectionId, { coverImage: data.obverseImage });
+  const imgUrl = data.obverseImage || data.obverse_image;
+  if (isFirstCoin && imgUrl) {
+    const colId = data.collectionId || data.collection_id;
+    await updateCollection(colId, { cover_image: imgUrl });
   }
 
-  return newCoin;
+  return coin;
 };
 
-export const updateCoin = (id, updates) => {
-  const coins = getCoins();
-  const idx = coins.findIndex(c => c.id === id);
-  if (idx !== -1) {
-    coins[idx] = { ...coins[idx], ...updates, updatedAt: new Date().toISOString() };
-    saveCoins(coins);
-    return coins[idx];
-  }
-  return null;
+export const updateCoin = async (id, updates) => {
+  return await base44.entities.Coin.update(id, updates);
 };
 
-export const deleteCoin = (id) => {
-  const coins = getCoins().filter(c => c.id !== id);
-  saveCoins(coins);
+export const deleteCoin = async (id) => {
+  await base44.entities.Coin.delete(id);
 };
 
-export const getPortfolioStats = () => {
-  const coins = getCoins();
-  const collections = getCollections();
+// ── Stats ──
+
+export const getPortfolioStats = async () => {
+  const coins = await getCoins();
+  const collections = await getCollections();
   const totalValue = coins.reduce((sum, c) => {
-    const val = parseFloat(c.marketValue?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') || c.marketValue?.thisCoinsEstimatedValue?.replace(/[^0-9.]/g, '')) || parseFloat(c.purchasePrice) || 0;
-    return sum + val;
+    const val = parseFloat(
+      c.market_value?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') ||
+      c.purchase_price || 0
+    );
+    return sum + (isNaN(val) ? 0 : val);
   }, 0);
-  const newest = [...coins].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+  const newest = coins.length > 0 ? coins[0] : null; // Already sorted by -created_date
   return {
     totalCoins: coins.length,
     totalCollections: collections.length,
     estimatedValue: totalValue,
-    newestCoin: newest || null,
+    newestCoin: newest,
   };
 };
 
-export const exportAllData = () => {
+// ── Settings ──
+
+export const getSettings = async () => {
+  const settings = await base44.entities.UserSettings.list();
+  if (settings.length > 0) return settings[0];
+  // Create default settings
+  return await base44.entities.UserSettings.create({
+    currency: 'USD',
+    default_country: '',
+    ai_auto_enrich: true,
+    price_auto_refresh: false,
+    github_api_key: '',
+  });
+};
+
+export const saveSettings = async (id, updates) => {
+  return await base44.entities.UserSettings.update(id, updates);
+};
+
+// ── Export ──
+
+export const exportAllData = async () => {
+  const collections = await getCollections();
+  const coins = await getCoins();
+  const settings = await getSettings();
   return {
-    collections: getCollections(),
-    coins: getCoins(),
-    settings: getSettings(),
+    collections,
+    coins,
+    settings,
     exportedAt: new Date().toISOString(),
-    version: '1.0',
+    version: '2.0',
   };
 };
 
-export const importAllData = (data) => {
-  if (!data || typeof data !== 'object') return;
-  if (Array.isArray(data.collections)) saveCollections(data.collections);
-  if (Array.isArray(data.coins)) saveCoins(data.coins);
-  if (data.settings && typeof data.settings === 'object') saveSettings(data.settings);
-};
-
-export const exportToCSV = () => {
-  const coins = getCoins();
+export const exportToCSV = async () => {
+  const coins = await getCoins();
   const headers = ['Name','Year','Mint','Denomination','Country','Grade','Composition','Weight','Diameter','Purchase Price','Purchase Date','Source','Estimated Value','Tags','Storage Location','Date Added'];
   const rows = coins.map(c => [
     `${c.year || ''} ${c.denomination || ''}`.trim(),
     c.year || '',
-    c.mintMark || '',
+    c.mint_mark || '',
     c.denomination || '',
     c.country || '',
-    c.userGrade || c.aiGrade?.suggested_grade || '',
+    c.user_grade || c.ai_grade?.suggested_grade || '',
     c.composition || '',
     c.weight || '',
     c.diameter || '',
-    c.purchasePrice || '',
-    c.purchaseDate || '',
-    c.whereAcquired || '',
-    c.marketValue?.thisCoinsEstimatedValue || '',
+    c.purchase_price || '',
+    c.purchase_date || '',
+    c.where_acquired || '',
+    c.market_value?.this_coin_estimated_value || '',
     (c.tags || []).join('; '),
-    c.storageLocation || '',
-    c.createdAt || '',
+    c.storage_location || '',
+    c.created_date || '',
   ]);
-  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-  return csv;
+  return [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
 };
