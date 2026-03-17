@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit2, Trash2, Share2, RotateCcw, Tag, MapPin, Calendar, DollarSign, Scale, Circle, ZoomIn } from 'lucide-react';
+import { ArrowLeft, Trash2, RotateCcw, Tag, MapPin, Calendar, DollarSign, Circle, ZoomIn } from 'lucide-react';
 import { getCoinById, updateCoin, deleteCoin, getCollections } from '../lib/storage';
 import { enrichCoin, getMarketValue, hasApiKey } from '../lib/anthropic';
 import CoinIntelligence from '../components/CoinIntelligence';
