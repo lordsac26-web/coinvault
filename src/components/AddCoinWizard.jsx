@@ -109,25 +109,40 @@ export default function AddCoinWizard({ collectionId, onClose, onAdded }) {
           
           {/* STEP 1: Images */}
           {step === 0 && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-8 justify-center">
+            <div className="space-y-5">
+              {/* Photo guide toggle */}
+              <button
+                type="button"
+                onClick={() => setShowPhotoGuide(!showPhotoGuide)}
+                className="flex items-center gap-2 text-xs text-[#c9a84c]/70 hover:text-[#e8c97a] transition-colors"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                {showPhotoGuide ? 'Hide photography tips' : 'How to take great coin photos'}
+              </button>
+
+              {showPhotoGuide && (
+                <CoinPhotoGuide onClose={() => setShowPhotoGuide(false)} />
+              )}
+
+              {/* Image uploads — stacked on mobile, side by side on desktop */}
+              <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-center justify-center">
                 <CoinImageUpload label="Obverse (Heads)" value={form.obverseImage} onChange={v => set('obverseImage', v)} />
                 <CoinImageUpload label="Reverse (Tails)" value={form.reverseImage} onChange={v => set('reverseImage', v)} />
               </div>
 
               {/* AI Grade toggle */}
-              <div className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${aiGradeToggle ? 'border-amber-400/40 bg-amber-500/5' : 'border-[#c9a84c]/20 bg-white/[0.02]'}`}
+              <div className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl border transition-all cursor-pointer ${aiGradeToggle ? 'border-amber-400/40 bg-amber-500/5' : 'border-[#c9a84c]/20 bg-white/[0.02]'}`}
                 onClick={() => setAiGradeToggle(!aiGradeToggle)}>
-                <div className={`w-10 h-6 rounded-full transition-all relative ${aiGradeToggle ? 'bg-amber-500' : 'bg-white/10'}`}>
+                <div className={`w-10 h-6 rounded-full transition-all relative shrink-0 ${aiGradeToggle ? 'bg-amber-500' : 'bg-white/10'}`}>
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${aiGradeToggle ? 'left-5' : 'left-1'}`} />
                 </div>
-                <Sparkles className={`w-5 h-5 ${aiGradeToggle ? 'text-amber-400' : 'text-[#f5f0e8]/40'}`} />
-                <div>
+                <Sparkles className={`w-5 h-5 shrink-0 ${aiGradeToggle ? 'text-amber-400' : 'text-[#f5f0e8]/40'}`} />
+                <div className="min-w-0">
                   <p className={`text-sm font-medium ${aiGradeToggle ? 'text-amber-400' : 'text-[#f5f0e8]/60'}`}>AI Grade This Coin</p>
-                  <p className="text-xs text-[#f5f0e8]/30">Upload both images to enable AI grading analysis</p>
+                  <p className="text-xs text-[#f5f0e8]/30">Upload both images to enable AI grading</p>
                 </div>
                 {aiGradeToggle && (!form.obverseImage || !form.reverseImage) && (
-                  <span className="ml-auto text-xs text-amber-400/60">Upload both images first</span>
+                  <span className="ml-auto text-xs text-amber-400/60 shrink-0 hidden sm:inline">Upload both first</span>
                 )}
               </div>
             </div>
