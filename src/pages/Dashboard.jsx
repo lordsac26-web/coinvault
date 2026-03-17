@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Coins, FolderOpen, TrendingUp, Clock, Edit2, Folder } from 'lucide-react';
-import { getCollections, getCoinsByCollection, getPortfolioStats, deleteCollection } from '../lib/storage';
-import { sampleCollections, sampleCoins } from '../lib/sampleData';
-import { createCollection } from '../lib/storage';
-import { saveCollections, saveCoins } from '../lib/storage';
+import { getCollections, getCoinsByCollection, getPortfolioStats } from '../lib/storage';
 import CreateCollectionModal from '../components/CreateCollectionModal';
 
 const StatCard = ({ icon: Icon, label, value, sub }) => (
