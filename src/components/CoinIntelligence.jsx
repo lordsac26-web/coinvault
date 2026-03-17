@@ -18,8 +18,8 @@ const rarityColors = {
   'Extremely Rare': 'bg-red-500/20 text-red-300',
 };
 
-export default function CoinIntelligence({ coin, onUpdate }) {
-  const [activeTab, setActiveTab] = useState('history');
+export default function CoinIntelligence({ coin, onUpdate, defaultTab }) {
+  const [activeTab, setActiveTab] = useState(defaultTab || 'history');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
