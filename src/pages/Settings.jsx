@@ -14,10 +14,6 @@ const Section = ({ title, children }) => (
 );
 
 export default function Settings() {
-  // Pre-populate GitHub key on first load
-  if (!localStorage.getItem('coinvault_github_key')) {
-    localStorage.setItem('coinvault_github_key', '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');
-  }
   const [settings, setSettingsState] = useState(getSettings());
   const [apiKey, setApiKeyState] = useState(localStorage.getItem('coinvault_github_key') || '');
   const [apiKeySaved, setApiKeySaved] = useState(hasApiKey());
@@ -101,7 +97,7 @@ export default function Settings() {
                   {apiKeySaved ? <><Check className="w-3.5 h-3.5" /> Saved</> : <><Key className="w-3.5 h-3.5" /> Save Key</>}
                 </button>
               </div>
-              <p className="text-xs text-[#f5f0e8]/30 mt-1">Required for AI grading, enrichment, and market value features. Get your PAT at github.com/settings/tokens</p>
+              <p className="text-xs text-[#f5f0e8]/30 mt-1">Required for AI grading, enrichment, and market value features. Get your PAT at <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-[#c9a84c]/60 hover:text-[#c9a84c] underline">github.com/settings/tokens</a></p>
             </div>
 
             <div className="flex items-center justify-between py-3 border-t border-[#c9a84c]/10">

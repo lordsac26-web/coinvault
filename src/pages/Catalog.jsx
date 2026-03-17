@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCoins, getCollections } from '../lib/storage';
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 export default function Catalog() {
   const [coins, setCoins] = useState([]);

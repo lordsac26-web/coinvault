@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Grid3X3, List, BookOpen, Search, Filter, SortAsc } from 'lucide-react';
+import { ArrowLeft, Plus, Grid3X3, List, BookOpen, Search } from 'lucide-react';
 import { getCollections, getCoinsByCollection, deleteCoin } from '../lib/storage';
 import AddCoinWizard from '../components/AddCoinWizard';
 

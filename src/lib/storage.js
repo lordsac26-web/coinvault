@@ -34,7 +34,7 @@ export const saveCollections = (collections) => {
 export const createCollection = (data) => {
   const collections = getCollections();
   const newCollection = {
-    id: `col_${Date.now()}`,
+    id: `col_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     name: data.name,
     description: data.description || '',
     type: data.type || 'Custom',
@@ -87,8 +87,12 @@ export const getCoinById = (id) => {
 
 export const createCoin = (data) => {
   const coins = getCoins();
+  // Check if this is the first coin in the collection BEFORE adding
+  const existingCoins = getCoinsByCollection(data.collectionId);
+  const isFirstCoin = existingCoins.length === 0;
+
   const newCoin = {
-    id: `coin_${Date.now()}`,
+    id: `coin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     ...data,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -96,9 +100,8 @@ export const createCoin = (data) => {
   coins.push(newCoin);
   saveCoins(coins);
 
-  // Update collection cover if first coin
-  const collCoins = getCoinsByCollection(data.collectionId);
-  if (collCoins.length === 1 && data.obverseImage) {
+  // Update collection cover if first coin with an image
+  if (isFirstCoin && data.obverseImage) {
     updateCollection(data.collectionId, { coverImage: data.obverseImage });
   }
 
@@ -125,10 +128,10 @@ export const getPortfolioStats = () => {
   const coins = getCoins();
   const collections = getCollections();
   const totalValue = coins.reduce((sum, c) => {
-    const val = parseFloat(c.marketValue?.thisCoinsEstimatedValue?.replace(/[^0-9.]/g, '')) || parseFloat(c.purchasePrice) || 0;
+    const val = parseFloat(c.marketValue?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') || c.marketValue?.thisCoinsEstimatedValue?.replace(/[^0-9.]/g, '')) || parseFloat(c.purchasePrice) || 0;
     return sum + val;
   }, 0);
-  const newest = coins.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+  const newest = [...coins].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
   return {
     totalCoins: coins.length,
     totalCollections: collections.length,
@@ -148,9 +151,10 @@ export const exportAllData = () => {
 };
 
 export const importAllData = (data) => {
-  if (data.collections) saveCollections(data.collections);
-  if (data.coins) saveCoins(data.coins);
-  if (data.settings) saveSettings(data.settings);
+  if (!data || typeof data !== 'object') return;
+  if (Array.isArray(data.collections)) saveCollections(data.collections);
+  if (Array.isArray(data.coins)) saveCoins(data.coins);
+  if (data.settings && typeof data.settings === 'object') saveSettings(data.settings);
 };
 
 export const exportToCSV = () => {
