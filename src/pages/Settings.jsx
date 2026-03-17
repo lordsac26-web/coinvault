@@ -84,20 +84,20 @@ export default function Settings() {
         <Section title="AI Configuration">
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#f5f0e8]/50 uppercase tracking-wider mb-1.5">Anthropic API Key</label>
+              <label className="block text-xs font-medium text-[#f5f0e8]/50 uppercase tracking-wider mb-1.5">GitHub Models API Key</label>
               <div className="flex gap-2">
                 <input
                   type="password"
                   value={apiKey}
                   onChange={e => setApiKeyState(e.target.value)}
-                  placeholder="sk-ant-..."
+                  placeholder="github_pat_..."
                   className={inputCls}
                 />
                 <button onClick={saveKey} className="px-4 py-2.5 rounded-lg bg-[#c9a84c]/20 text-[#e8c97a] border border-[#c9a84c]/30 hover:bg-[#c9a84c]/30 transition-colors text-sm font-medium whitespace-nowrap flex items-center gap-1.5">
                   {apiKeySaved ? <><Check className="w-3.5 h-3.5" /> Saved</> : <><Key className="w-3.5 h-3.5" /> Save Key</>}
                 </button>
               </div>
-              <p className="text-xs text-[#f5f0e8]/30 mt-1">Required for AI grading, enrichment, and market value features. Get your key at console.anthropic.com</p>
+              <p className="text-xs text-[#f5f0e8]/30 mt-1">Required for AI grading, enrichment, and market value features. Get your PAT at github.com/settings/tokens</p>
             </div>
 
             <div className="flex items-center justify-between py-3 border-t border-[#c9a84c]/10">
