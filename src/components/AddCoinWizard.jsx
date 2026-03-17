@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { X, Sparkles, Loader2, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { X, Sparkles, Loader2, ChevronRight, ChevronLeft, Check, HelpCircle } from 'lucide-react';
 import { SHELDON_GRADES, COUNTRIES, MINT_MARKS, COMPOSITIONS, ACQUISITION_SOURCES } from '../lib/sampleData';
 import { createCoin } from '../lib/storage';
 import { gradeCoin } from '../lib/anthropic';
 import CoinImageUpload from './CoinImageUpload';
 import AIGradingCard from './AIGradingCard';
+import CoinPhotoGuide from './CoinPhotoGuide';
 
 const steps = ['Images', 'Identification', 'Details'];
 
