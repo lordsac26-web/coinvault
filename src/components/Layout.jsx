@@ -1,6 +1,6 @@
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { useState } from 'react';
-import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, Menu, X } from 'lucide-react';
+import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 
 const navItems = [
   { label: 'Collections', path: '/collections', icon: LayoutGrid },
@@ -12,7 +12,6 @@ const navItems = [
 
 export default function Layout() {
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#0a0e1a] text-[#f5f0e8]" style={{ fontFamily: "'Source Sans 3', 'Source Sans Pro', sans-serif" }}>
@@ -49,27 +48,42 @@ export default function Layout() {
             })}
           </div>
 
-          {/* Mobile menu button */}
-          <button className="md:hidden p-2 text-[#f5f0e8]/70 hover:text-[#e8c97a]" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
+          {/* Mobile menu — Sheet drawer */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="md:hidden p-2 text-[#f5f0e8]/70 hover:text-[#e8c97a] transition-colors">
+                <Menu className="w-5 h-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-64 border-l border-[#c9a84c]/20 bg-[#0a0e1a] p-0">
+              {/* Drawer header */}
+              <div className="flex items-center gap-2.5 px-5 py-5 border-b border-[#c9a84c]/15">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] flex items-center justify-center">
+                  <Coins className="w-4 h-4 text-[#0a0e1a]" />
+                </div>
+                <span className="text-lg font-bold tracking-wide" style={{ fontFamily: "'Playfair Display', Georgia, serif", color: '#e8c97a' }}>
+                  CoinVault
+                </span>
+              </div>
 
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="md:hidden border-t border-[#c9a84c]/20 bg-[#0a0e1a] px-4 pb-4 pt-2">
-            {navItems.map(({ label, path, icon: Icon }) => {
-              const active = location.pathname === path;
-              return (
-                <Link key={path} to={path} onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-1 ${active ? 'text-[#e8c97a] bg-[#c9a84c]/10' : 'text-[#f5f0e8]/60 hover:text-[#f5f0e8]'}`}>
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+              {/* Drawer nav links */}
+              <nav className="flex flex-col gap-1 px-3 py-4">
+                {navItems.map(({ label, path, icon: Icon }) => {
+                  const active = location.pathname === path || location.pathname.startsWith(path + '/');
+                  return (
+                    <SheetClose asChild key={path}>
+                      <Link to={path}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${active ? 'text-[#e8c97a] bg-[#c9a84c]/15' : 'text-[#f5f0e8]/60 hover:text-[#f5f0e8] hover:bg-white/5'}`}>
+                        <Icon className="w-5 h-5" />
+                        {label}
+                      </Link>
+                    </SheetClose>
+                  );
+                })}
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </nav>
 
       {/* Content */}

@@ -5,15 +5,15 @@ import { getCollections, getCoinsByCollection, getPortfolioStats } from '../lib/
 import CreateCollectionModal from '../components/CreateCollectionModal';
 
 const StatCard = ({ icon: Icon, label, value, sub }) => (
-  <div className="rounded-2xl border border-[#c9a84c]/20 p-5 flex items-center gap-4"
+  <div className="rounded-2xl border border-[#c9a84c]/20 p-4 sm:p-5 flex items-center gap-3 sm:gap-4 min-w-0 overflow-hidden"
     style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(8px)' }}>
-    <div className="w-12 h-12 rounded-xl bg-[#c9a84c]/10 flex items-center justify-center shrink-0">
-      <Icon className="w-6 h-6 text-[#e8c97a]" />
+    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#c9a84c]/10 flex items-center justify-center shrink-0">
+      <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-[#e8c97a]" />
     </div>
-    <div>
-      <p className="text-xs text-[#f5f0e8]/40 uppercase tracking-wider">{label}</p>
-      <p className="text-xl font-bold text-[#f5f0e8] mt-0.5" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{value}</p>
-      {sub && <p className="text-xs text-[#f5f0e8]/30 mt-0.5">{sub}</p>}
+    <div className="min-w-0">
+      <p className="text-[10px] sm:text-xs text-[#f5f0e8]/40 uppercase tracking-wider truncate">{label}</p>
+      <p className="text-base sm:text-xl font-bold text-[#f5f0e8] mt-0.5 truncate" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{value}</p>
+      {sub && <p className="text-[10px] sm:text-xs text-[#f5f0e8]/30 mt-0.5 truncate">{sub}</p>}
     </div>
   </div>
 );
