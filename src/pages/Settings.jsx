@@ -15,7 +15,7 @@ const Section = ({ title, children }) => (
 
 export default function Settings() {
   const [settings, setSettingsState] = useState(getSettings());
-  const [apiKey, setApiKeyState] = useState(localStorage.getItem('coinvault_anthropic_key') || '');
+  const [apiKey, setApiKeyState] = useState(localStorage.getItem('coinvault_github_key') || '');
   const [apiKeySaved, setApiKeySaved] = useState(hasApiKey());
   const [scanEmail, setScanEmail] = useState('');
   const [toast, setToast] = useState('');
