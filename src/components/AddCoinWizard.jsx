@@ -259,7 +259,7 @@ export default function AddCoinWizard({ collectionId, onClose, onAdded }) {
                   <input type="date" value={form.purchaseDate} onChange={e => set('purchaseDate', e.target.value)}
                     className={inputCls} />
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <label className={labelCls}>Where Acquired</label>
                   <select value={form.whereAcquired} onChange={e => set('whereAcquired', e.target.value)} className={selectCls}>
                     {ACQUISITION_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
