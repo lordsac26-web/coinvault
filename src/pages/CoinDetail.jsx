@@ -223,7 +223,7 @@ export default function CoinDetail() {
 
         <div className="p-6">
           {(activeTab === 'History' || activeTab === 'Mintage' || activeTab === 'Varieties') && (
-            <CoinIntelligence coin={coin} onUpdate={updated => setCoin(updated)} />
+            <CoinIntelligence coin={coin} onUpdate={updated => setCoin(updated)} defaultTab={activeTab.toLowerCase()} />
           )}
 
           {activeTab === 'Market Value' && (
