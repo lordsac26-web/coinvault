@@ -81,8 +81,8 @@ export default function AddCoinWizard({ collectionId, onClose, onAdded }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)' }}>
-      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-[#c9a84c]/30 overflow-hidden"
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)' }}>
+      <div className="w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl border border-[#c9a84c]/30 overflow-hidden"
         style={{ background: '#0d1220', boxShadow: '0 25px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.1)' }}>
         
         {/* Header */}
