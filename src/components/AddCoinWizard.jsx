@@ -248,7 +248,7 @@ export default function AddCoinWizard({ collectionId, onClose, onAdded }) {
           {/* STEP 3: Details */}
           {step === 2 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>Purchase Price ($)</label>
                   <input type="number" value={form.purchasePrice} onChange={e => set('purchasePrice', e.target.value)}
