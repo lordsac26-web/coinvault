@@ -15,6 +15,7 @@ const Section = ({ title, children }) => (
 
 export default function Settings() {
   const [settings, setSettingsState] = useState(getSettings());
+  // eslint-disable-next-line no-unused-vars
   // Pre-populate GitHub key if not yet saved
   useEffect(() => {
     if (!localStorage.getItem('coinvault_github_key')) {
