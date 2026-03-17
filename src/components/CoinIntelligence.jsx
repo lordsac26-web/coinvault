@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RefreshCw, BookOpen, BarChart2, Layers, Palette, Clock } from 'lucide-react';
 import { enrichCoin, hasApiKey } from '../lib/anthropic';
 import { updateCoin } from '../lib/storage';
