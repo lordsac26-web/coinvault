@@ -1,28 +1,46 @@
-// Anthropic API helpers for CoinVault
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+// GitHub Models API helpers for CoinVault
+const GITHUB_MODELS_URL = 'https://models.inference.ai.azure.com/chat/completions';
+const MODEL = 'gpt-4o';
 
-const getApiKey = () => {
-  return localStorage.getItem('coinvault_anthropic_key') || '';
-};
+const getApiKey = () => localStorage.getItem('coinvault_github_key') || '';
 
 const headers = () => ({
   'Content-Type': 'application/json',
-  'x-api-key': getApiKey(),
-  'anthropic-version': '2023-06-01',
-  'anthropic-dangerous-direct-browser-access': 'true',
+  'Authorization': `Bearer ${getApiKey()}`,
 });
 
+const chat = async (systemPrompt, userContent, maxTokens = 2000) => {
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userContent },
+  ];
+  const res = await fetch(GITHUB_MODELS_URL, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ model: MODEL, messages, max_tokens: maxTokens }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`API error ${res.status}: ${err}`);
+  }
+  const data = await res.json();
+  return data.choices[0].message.content;
+};
+
 export const gradeCoin = async (obverseBase64, reverseBase64, mimeType = 'image/jpeg') => {
-  const body = {
-    model: 'claude-opus-4-5',
-    max_tokens: 1500,
-    system: `You are a certified numismatist and professional coin grader with expertise equivalent to PCGS and NGC standards. Analyze the provided coin images (obverse and reverse) and return a JSON grading report. Return ONLY valid JSON, no markdown, no explanation.`,
-    messages: [{
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are a certified numismatist and professional coin grader with expertise equivalent to PCGS and NGC standards. Return ONLY valid JSON, no markdown, no explanation.',
+    },
+    {
       role: 'user',
       content: [
-        { type: 'image', source: { type: 'base64', media_type: mimeType, data: obverseBase64 } },
-        { type: 'image', source: { type: 'base64', media_type: mimeType, data: reverseBase64 } },
-        { type: 'text', text: `Grade these coin images and return this exact JSON structure:
+        { type: 'image_url', image_url: { url: `data:${mimeType};base64,${obverseBase64}` } },
+        { type: 'image_url', image_url: { url: `data:${mimeType};base64,${reverseBase64}` } },
+        {
+          type: 'text',
+          text: `Grade these coin images and return this exact JSON structure:
 {
   "suggested_grade": "MS-63",
   "grade_description": "Mint State - Choice Uncirculated",
@@ -41,24 +59,32 @@ export const gradeCoin = async (obverseBase64, reverseBase64, mimeType = 'image/
     "eye_appeal": "Very attractive",
     "notable_marks": []
   },
-  "grading_rationale": "The coin displays strong luster with minor contact marks typical of MS-63. Strike is sharp with good eye appeal.",
+  "grading_rationale": "The coin displays strong luster with minor contact marks typical of MS-63.",
   "red_flags": [],
   "professional_submission_recommended": false,
   "estimated_grade_range": "MS-62 to MS-64"
-}` }
-      ]
-    }]
-  };
+}`,
+        },
+      ],
+    },
+  ];
 
-  const res = await fetch(ANTHROPIC_URL, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const res = await fetch(GITHUB_MODELS_URL, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ model: MODEL, messages, max_tokens: 1500 }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`API error ${res.status}: ${err}`);
+  }
   const data = await res.json();
-  const text = data.content[0].text;
+  const text = data.choices[0].message.content;
   return JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
 };
 
 export const enrichCoin = async (coinData) => {
-  const prompt = `Search for comprehensive historical and mintage data for this coin:
+  const prompt = `Provide comprehensive historical and mintage data for this coin:
 Country: ${coinData.country}
 Denomination: ${coinData.denomination}
 Year: ${coinData.year}
@@ -91,28 +117,12 @@ Return ONLY this exact JSON structure (no markdown):
   "notable_examples": "Famous specimens, auction records..."
 }`;
 
-  const body = {
-    model: 'claude-opus-4-5',
-    max_tokens: 2000,
-    tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-    system: 'You are a numismatic historian and data researcher. Return ONLY valid JSON, no markdown.',
-    messages: [{ role: 'user', content: prompt }]
-  };
-
-  const res = await fetch(ANTHROPIC_URL, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  const data = await res.json();
-  
-  // Extract text from potentially tool-use response
-  let text = '';
-  for (const block of data.content) {
-    if (block.type === 'text') text += block.text;
-  }
+  const text = await chat('You are a numismatic historian and data researcher. Return ONLY valid JSON, no markdown.', prompt);
   return JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
 };
 
 export const getMarketValue = async (coinData) => {
-  const prompt = `Search current numismatic price guides including PCGS CoinFacts, NGC Coin Explorer, USA CoinBook, CDN Greysheet, and recent auction results for:
+  const prompt = `Provide current numismatic price guide estimates for:
 Country: ${coinData.country}
 Denomination: ${coinData.denomination}
 Year: ${coinData.year}
@@ -142,30 +152,15 @@ Return ONLY this exact JSON (no markdown):
     {"date": "2024-07-10", "grade": "MS-64", "price": "$580", "auction_house": "PCGS", "notes": "CAC approved"}
   ],
   "price_trend": "Stable",
-  "trend_note": "Prices have remained stable over the past 12 months with slight upward pressure on higher grades.",
+  "trend_note": "Prices have remained stable over the past 12 months.",
   "greysheet_bid": "$380",
   "greysheet_ask": "$420",
-  "sources_checked": ["PCGS CoinFacts", "NGC Coin Explorer", "USA CoinBook", "CDN Greysheet", "Heritage Auctions"]
+  "sources_checked": ["PCGS CoinFacts", "NGC Coin Explorer", "USA CoinBook", "CDN Greysheet"]
 }`;
 
-  const body = {
-    model: 'claude-opus-4-5',
-    max_tokens: 2000,
-    tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-    system: 'You are a coin market analyst. Return ONLY valid JSON, no markdown.',
-    messages: [{ role: 'user', content: prompt }]
-  };
-
-  const res = await fetch(ANTHROPIC_URL, { method: 'POST', headers: headers(), body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  const data = await res.json();
-  
-  let text = '';
-  for (const block of data.content) {
-    if (block.type === 'text') text += block.text;
-  }
+  const text = await chat('You are a coin market analyst with deep knowledge of numismatic pricing. Return ONLY valid JSON, no markdown.', prompt);
   return JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
 };
 
 export const hasApiKey = () => !!getApiKey();
-export const setApiKey = (key) => localStorage.setItem('coinvault_anthropic_key', key);
+export const setApiKey = (key) => localStorage.setItem('coinvault_github_key', key);
