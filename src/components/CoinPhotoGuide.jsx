@@ -25,7 +25,7 @@ const tips = [
       'Hold phone 4–6 inches (10–15 cm) directly above the coin',
       'Tap the coin on screen to lock focus before shooting',
       'Enable HDR mode if your phone supports it',
-      'Use the rear camera — it's much sharper than the selfie camera',
+      'Use the rear camera \u2014 it\u2019s much sharper than the selfie camera',
     ],
     donts: [
       'Digital zoom — it reduces quality. Move closer instead',
