@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getCoins, getCollections } from '../lib/storage';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from 'recharts';
-import { TrendingUp, Award, Star } from 'lucide-react';
+import { TrendingUp, Loader2 } from 'lucide-react';
 
 const GOLD_PALETTE = ['#c9a84c', '#e8c97a', '#a07830', '#f5d88a', '#7a5c28', '#d4af6a', '#b8942e', '#f0c860'];
 
@@ -17,25 +17,30 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function Analytics() {
   const [coins, setCoins] = useState([]);
-  const [collections, setCollections] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setCoins(getCoins());
-    setCollections(getCollections());
+    (async () => {
+      setCoins(await getCoins());
+      setLoading(false);
+    })();
   }, []);
 
-  // Grade distribution
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <Loader2 className="w-8 h-8 text-[#c9a84c] animate-spin" />
+      </div>
+    );
+  }
+
   const gradeDist = coins.reduce((acc, c) => {
-    if (c.userGrade) acc[c.userGrade] = (acc[c.userGrade] || 0) + 1;
+    if (c.user_grade) acc[c.user_grade] = (acc[c.user_grade] || 0) + 1;
     return acc;
   }, {});
   const gradeData = Object.entries(gradeDist).map(([grade, count]) => ({ grade, count }))
-    .sort((a, b) => {
-      const sheldon = g => parseInt(g.grade.replace(/[^0-9]/g, '')) || 0;
-      return sheldon(a) - sheldon(b);
-    });
+    .sort((a, b) => { const s = g => parseInt(g.grade.replace(/[^0-9]/g, '')) || 0; return s(a) - s(b); });
 
-  // By country
   const countryDist = coins.reduce((acc, c) => {
     const country = c.country?.replace(/^\S+\s/, '') || 'Unknown';
     acc[country] = (acc[country] || 0) + 1;
@@ -44,7 +49,6 @@ export default function Analytics() {
   const countryData = Object.entries(countryDist).map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value).slice(0, 8);
 
-  // By composition
   const metaDist = coins.reduce((acc, c) => {
     const m = c.composition || 'Unknown';
     acc[m] = (acc[m] || 0) + 1;
@@ -52,22 +56,17 @@ export default function Analytics() {
   }, {});
   const metalData = Object.entries(metaDist).map(([name, value]) => ({ name, value }));
 
-  // Portfolio over time
-  const sorted = [...coins].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const sorted = [...coins].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   let running = 0;
   const portfolioData = sorted.map(c => {
-    running += parseFloat(c.purchasePrice) || 0;
-    return { date: new Date(c.createdAt).toLocaleDateString(), value: running };
+    running += parseFloat(c.purchase_price) || 0;
+    return { date: new Date(c.created_date).toLocaleDateString(), value: running };
   });
 
-  // Top 5 most valuable
-  const top5 = [...coins]
-    .sort((a, b) => (parseFloat(b.purchasePrice) || 0) - (parseFloat(a.purchasePrice) || 0))
-    .slice(0, 5);
-
-  const totalPaid = coins.reduce((s, c) => s + (parseFloat(c.purchasePrice) || 0), 0);
+  const top5 = [...coins].sort((a, b) => (parseFloat(b.purchase_price) || 0) - (parseFloat(a.purchase_price) || 0)).slice(0, 5);
+  const totalPaid = coins.reduce((s, c) => s + (parseFloat(c.purchase_price) || 0), 0);
   const totalEst = coins.reduce((s, c) => {
-    const v = parseFloat(c.marketValue?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') || c.marketValue?.thisCoinsEstimatedValue?.replace(/[^0-9.]/g, '') || c.purchasePrice || 0);
+    const v = parseFloat(c.market_value?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') || c.purchase_price || 0);
     return s + (isNaN(v) ? 0 : v);
   }, 0);
 
@@ -83,14 +82,11 @@ export default function Analytics() {
       {noData ? (
         <div className="rounded-2xl border border-[#c9a84c]/20 p-16 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
           <TrendingUp className="w-12 h-12 text-[#c9a84c]/30 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-[#f5f0e8]/50 mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-            No data yet
-          </h3>
+          <h3 className="text-lg font-semibold text-[#f5f0e8]/50 mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>No data yet</h3>
           <p className="text-sm text-[#f5f0e8]/30">Add coins to see analytics</p>
         </div>
       ) : (
         <div className="space-y-6">
-          {/* P&L summary */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {[
               { label: 'Total Coins', value: coins.length },
@@ -104,7 +100,6 @@ export default function Analytics() {
             ))}
           </div>
 
-          {/* Portfolio over time */}
           {portfolioData.length > 1 && (
             <div className="rounded-2xl border border-[#c9a84c]/20 p-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <h3 className="text-sm font-semibold text-[#e8c97a] mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Portfolio Value Over Time</h3>
@@ -121,7 +116,6 @@ export default function Analytics() {
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Grade distribution */}
             <div className="rounded-2xl border border-[#c9a84c]/20 p-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <h3 className="text-sm font-semibold text-[#e8c97a] mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Grade Distribution</h3>
               {gradeData.length > 0 ? (
@@ -137,7 +131,6 @@ export default function Analytics() {
               ) : <p className="text-sm text-[#f5f0e8]/30 text-center py-8">No graded coins yet</p>}
             </div>
 
-            {/* By metal */}
             <div className="rounded-2xl border border-[#c9a84c]/20 p-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <h3 className="text-sm font-semibold text-[#e8c97a] mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>By Metal / Composition</h3>
               {metalData.length > 0 ? (
@@ -163,7 +156,6 @@ export default function Analytics() {
               ) : <p className="text-sm text-[#f5f0e8]/30 text-center py-8">No composition data yet</p>}
             </div>
 
-            {/* By country */}
             <div className="rounded-2xl border border-[#c9a84c]/20 p-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <h3 className="text-sm font-semibold text-[#e8c97a] mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>By Country</h3>
               {countryData.length > 0 ? (
@@ -181,23 +173,18 @@ export default function Analytics() {
               ) : <p className="text-sm text-[#f5f0e8]/30 text-center py-8">No country data yet</p>}
             </div>
 
-            {/* Top 5 most valuable */}
             <div className="rounded-2xl border border-[#c9a84c]/20 p-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <h3 className="text-sm font-semibold text-[#e8c97a] mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Top 5 Most Valuable</h3>
               <div className="space-y-3">
                 {top5.map((coin, i) => (
                   <div key={coin.id} className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? 'bg-[#c9a84c]/30 text-[#e8c97a]' : 'bg-white/5 text-[#f5f0e8]/40'}`}>
-                      {i + 1}
-                    </div>
-                    {coin.obverseImage && (
-                      <img src={coin.obverseImage} alt="" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30 shrink-0" />
-                    )}
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? 'bg-[#c9a84c]/30 text-[#e8c97a]' : 'bg-white/5 text-[#f5f0e8]/40'}`}>{i + 1}</div>
+                    {coin.obverse_image && <img src={coin.obverse_image} alt="" className="w-8 h-8 rounded-full object-cover border border-[#c9a84c]/30 shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-[#f5f0e8] truncate">{coin.year} {coin.denomination}</p>
-                      <p className="text-xs text-[#f5f0e8]/40">{coin.userGrade || '—'}</p>
+                      <p className="text-xs text-[#f5f0e8]/40">{coin.user_grade || '\u2014'}</p>
                     </div>
-                    <span className="text-sm font-medium text-[#c9a84c] shrink-0">${coin.purchasePrice || '?'}</span>
+                    <span className="text-sm font-medium text-[#c9a84c] shrink-0">${coin.purchase_price || '?'}</span>
                   </div>
                 ))}
               </div>
