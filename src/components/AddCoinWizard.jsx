@@ -24,6 +24,8 @@ export default function AddCoinWizard({ collectionId, onClose, onAdded }) {
   const [customComp, setCustomComp] = useState('');
   const [tagInput, setTagInput] = useState('');
 
+  const [showPhotoGuide, setShowPhotoGuide] = useState(false);
+
   const [form, setForm] = useState({
     collectionId,
     country: '', denomination: '', year: '', yearUnknown: false,
