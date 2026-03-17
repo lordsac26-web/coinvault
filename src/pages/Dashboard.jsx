@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Coins, FolderOpen, TrendingUp, Clock, Edit2, Folder } from 'lucide-react';
+import { Plus, Coins, FolderOpen, TrendingUp, Clock, Edit2, Folder, Loader2 } from 'lucide-react';
 import { getCollections, getCoinsByCollection, getPortfolioStats } from '../lib/storage';
 import CreateCollectionModal from '../components/CreateCollectionModal';
 
@@ -18,17 +18,15 @@ const StatCard = ({ icon: Icon, label, value, sub }) => (
   </div>
 );
 
-const CollectionCard = ({ collection, coinCount, estimatedValue, onEdit, onDelete }) => {
+const CollectionCard = ({ collection, coinCount, estimatedValue }) => {
   const navigate = useNavigate();
   return (
     <div className="group rounded-2xl border border-[#c9a84c]/20 overflow-hidden transition-all hover:border-[#c9a84c]/40 hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] cursor-pointer"
       style={{ background: 'rgba(255,255,255,0.03)' }}
       onClick={() => navigate(`/collections/${collection.id}`)}>
-      
-      {/* Cover */}
       <div className="h-36 bg-gradient-to-br from-[#c9a84c]/10 to-[#0a0e1a] flex items-center justify-center relative overflow-hidden">
-        {collection.coverImage ? (
-          <img src={collection.coverImage} alt="" className="w-full h-full object-cover opacity-60" />
+        {collection.cover_image ? (
+          <img src={collection.cover_image} alt="" className="w-full h-full object-cover opacity-60" />
         ) : (
           <Coins className="w-12 h-12 text-[#c9a84c]/30" />
         )}
@@ -37,7 +35,6 @@ const CollectionCard = ({ collection, coinCount, estimatedValue, onEdit, onDelet
           <span className="text-xs text-[#c9a84c] bg-[#c9a84c]/10 border border-[#c9a84c]/30 px-2 py-0.5 rounded-full">{collection.type}</span>
         </div>
       </div>
-
       <div className="p-4">
         <h3 className="font-bold text-[#f5f0e8] text-sm mb-1 group-hover:text-[#e8c97a] transition-colors" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
           {collection.name}
@@ -45,27 +42,19 @@ const CollectionCard = ({ collection, coinCount, estimatedValue, onEdit, onDelet
         {collection.description && (
           <p className="text-xs text-[#f5f0e8]/40 mb-3 line-clamp-2">{collection.description}</p>
         )}
-        
         <div className="flex items-center justify-between text-xs text-[#f5f0e8]/50 mb-3">
           <span>{coinCount} coins</span>
           {estimatedValue > 0 && <span className="text-[#c9a84c]">${estimatedValue.toLocaleString()}</span>}
-          <span>{new Date(collection.createdAt).toLocaleDateString()}</span>
+          <span>{new Date(collection.created_date).toLocaleDateString()}</span>
         </div>
-
-        {collection.targetGoal && (
-          <p className="text-xs text-[#f5f0e8]/30 italic mb-3 truncate">Goal: {collection.targetGoal}</p>
+        {collection.target_goal && (
+          <p className="text-xs text-[#f5f0e8]/30 italic mb-3 truncate">Goal: {collection.target_goal}</p>
         )}
-
-        <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-          <Link to={`/collections/${collection.id}`}
-            className="flex-1 text-center text-xs py-1.5 rounded-lg bg-[#c9a84c]/15 text-[#e8c97a] border border-[#c9a84c]/30 hover:bg-[#c9a84c]/25 transition-colors">
-            Open
-          </Link>
-          <button onClick={() => onEdit(collection)}
-            className="p-1.5 rounded-lg bg-white/5 text-[#f5f0e8]/40 hover:text-[#f5f0e8] hover:bg-white/10 transition-colors">
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <Link to={`/collections/${collection.id}`}
+          className="block text-center text-xs py-1.5 rounded-lg bg-[#c9a84c]/15 text-[#e8c97a] border border-[#c9a84c]/30 hover:bg-[#c9a84c]/25 transition-colors"
+          onClick={e => e.stopPropagation()}>
+          Open
+        </Link>
       </div>
     </div>
   );
@@ -73,44 +62,58 @@ const CollectionCard = ({ collection, coinCount, estimatedValue, onEdit, onDelet
 
 export default function Dashboard() {
   const [collections, setCollections] = useState([]);
+  const [collectionData, setCollectionData] = useState([]);
   const [stats, setStats] = useState({ totalCoins: 0, totalCollections: 0, estimatedValue: 0, newestCoin: null });
   const [showCreate, setShowCreate] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const load = () => {
-    const cols = getCollections();
+  const load = async () => {
+    setLoading(true);
+    const [cols, portfolioStats] = await Promise.all([
+      getCollections(),
+      getPortfolioStats(),
+    ]);
     setCollections(cols);
-    setStats(getPortfolioStats());
+    setStats(portfolioStats);
+
+    // Load coin counts per collection
+    const data = await Promise.all(cols.map(async (col) => {
+      const coins = await getCoinsByCollection(col.id);
+      const val = coins.reduce((s, c) => {
+        const v = parseFloat(c.market_value?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') || c.purchase_price || 0);
+        return s + (isNaN(v) ? 0 : v);
+      }, 0);
+      return { collection: col, coinCount: coins.length, estimatedValue: val };
+    }));
+    setCollectionData(data);
+    setLoading(false);
   };
 
-  useEffect(() => {
-    load();
-    setInitialized(true);
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  const handleCreated = (col) => {
+  const handleCreated = () => {
     setShowCreate(false);
     load();
   };
 
-  const collectionData = collections.map(col => {
-    const coins = getCoinsByCollection(col.id);
-    const val = coins.reduce((s, c) => {
-      const v = parseFloat(c.marketValue?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') || c.marketValue?.thisCoinsEstimatedValue?.replace(/[^0-9.]/g, '') || c.purchasePrice || 0);
-      return s + (isNaN(v) ? 0 : v);
-    }, 0);
-    return { collection: col, coinCount: coins.length, estimatedValue: val };
-  });
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-[#c9a84c] animate-spin" />
+          <p className="text-sm text-[#f5f0e8]/40">Loading your vault...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      {/* Hero vignette */}
       <div className="fixed inset-0 pointer-events-none z-0" style={{
         background: 'radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.07) 0%, transparent 60%)'
       }} />
 
       <div className="relative z-10">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#f5f0e8] mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             Your Vault
@@ -118,17 +121,15 @@ export default function Dashboard() {
           <p className="text-[#f5f0e8]/40 text-sm">Welcome back to CoinVault</p>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard icon={Coins} label="Total Coins" value={stats.totalCoins} />
           <StatCard icon={Folder} label="Collections" value={stats.totalCollections} />
           <StatCard icon={TrendingUp} label="Est. Portfolio" value={`$${stats.estimatedValue.toLocaleString()}`} />
           <StatCard icon={Clock} label="Newest Addition"
-            value={stats.newestCoin ? `${stats.newestCoin.year || '?'} ${stats.newestCoin.denomination || 'Coin'}` : '—'}
+            value={stats.newestCoin ? `${stats.newestCoin.year || '?'} ${stats.newestCoin.denomination || 'Coin'}` : '\u2014'}
             sub={stats.newestCoin ? stats.newestCoin.country : 'No coins yet'} />
         </div>
 
-        {/* Collections */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-semibold text-[#f5f0e8]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             My Collections
@@ -162,18 +163,15 @@ export default function Dashboard() {
                 collection={collection}
                 coinCount={coinCount}
                 estimatedValue={estimatedValue}
-                onEdit={() => {}}
-                onDelete={() => {}}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* FAB */}
       <button
         onClick={() => setShowCreate(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0e1a] shadow-lg hover:shadow-[#c9a84c]/40 hover:scale-105 transition-all flex items-center justify-center z-40"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0e1a] shadow-lg hover:scale-105 transition-all flex items-center justify-center z-40"
         style={{ boxShadow: '0 4px 20px rgba(201,168,76,0.4)' }}>
         <Plus className="w-6 h-6" />
       </button>

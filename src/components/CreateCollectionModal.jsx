@@ -7,14 +7,12 @@ export default function CreateCollectionModal({ onClose, onCreated }) {
   const [form, setForm] = useState({ name: '', description: '', type: 'Custom', targetGoal: '' });
   const [saving, setSaving] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const col = createCollection(form);
-    setTimeout(() => {
-      setSaving(false);
-      onCreated(col);
-    }, 300);
+    const col = await createCollection(form);
+    setSaving(false);
+    onCreated(col);
   };
 
   return (
@@ -42,15 +40,12 @@ export default function CreateCollectionModal({ onClose, onCreated }) {
               placeholder="e.g. Morgan Silver Dollars"
               className="w-full bg-white/5 border border-[#c9a84c]/20 rounded-lg px-3 py-2.5 text-[#f5f0e8] placeholder-[#f5f0e8]/30 focus:outline-none focus:border-[#c9a84c]/60 transition-colors text-sm" />
           </div>
-
           <div>
             <label className="block text-xs font-medium text-[#f5f0e8]/50 uppercase tracking-wider mb-1.5">Description</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              placeholder="Brief description of this collection..."
-              rows={2}
+              placeholder="Brief description of this collection..." rows={2}
               className="w-full bg-white/5 border border-[#c9a84c]/20 rounded-lg px-3 py-2.5 text-[#f5f0e8] placeholder-[#f5f0e8]/30 focus:outline-none focus:border-[#c9a84c]/60 transition-colors text-sm resize-none" />
           </div>
-
           <div>
             <label className="block text-xs font-medium text-[#f5f0e8]/50 uppercase tracking-wider mb-1.5">Collection Type</label>
             <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
@@ -58,14 +53,12 @@ export default function CreateCollectionModal({ onClose, onCreated }) {
               {COLLECTION_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-
           <div>
             <label className="block text-xs font-medium text-[#f5f0e8]/50 uppercase tracking-wider mb-1.5">Target Goal <span className="normal-case text-[#f5f0e8]/30">(optional)</span></label>
             <input value={form.targetGoal} onChange={e => setForm({ ...form, targetGoal: e.target.value })}
-              placeholder="e.g. Complete Lincoln Cent set 1909–1958"
+              placeholder="e.g. Complete Lincoln Cent set 1909-1958"
               className="w-full bg-white/5 border border-[#c9a84c]/20 rounded-lg px-3 py-2.5 text-[#f5f0e8] placeholder-[#f5f0e8]/30 focus:outline-none focus:border-[#c9a84c]/60 transition-colors text-sm" />
           </div>
-
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}
               className="flex-1 px-4 py-2.5 rounded-lg border border-[#f5f0e8]/20 text-[#f5f0e8]/60 hover:text-[#f5f0e8] hover:border-[#f5f0e8]/40 transition-colors text-sm font-medium">
