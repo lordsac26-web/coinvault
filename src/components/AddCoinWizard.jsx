@@ -151,8 +151,8 @@ export default function AddCoinWizard({ collectionId, onClose, onAdded }) {
           {/* STEP 2: Identification */}
           {step === 1 && (
             <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
                   <label className={labelCls}>Country of Origin</label>
                   <input list="countries-list" value={form.country} onChange={e => set('country', e.target.value)}
                     placeholder="Search country..." className={inputCls} />
