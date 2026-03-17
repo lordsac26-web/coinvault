@@ -24,10 +24,9 @@ export default function CoinIntelligence({ coin, onUpdate, defaultTab }) {
   const [error, setError] = useState('');
 
   // Sync internal tab when parent switches between History/Mintage/Varieties
-  const prevDefaultTab = useState(defaultTab)[0];
-  if (defaultTab && defaultTab !== prevDefaultTab && defaultTab !== activeTab) {
-    setActiveTab(defaultTab);
-  }
+  useEffect(() => {
+    if (defaultTab) setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   const data = coin.enrichment;
 
