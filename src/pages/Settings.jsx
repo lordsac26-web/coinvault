@@ -15,6 +15,15 @@ const Section = ({ title, children }) => (
 
 export default function Settings() {
   const [settings, setSettingsState] = useState(getSettings());
+  // Pre-populate GitHub key if not yet saved
+  useEffect(() => {
+    if (!localStorage.getItem('coinvault_github_key')) {
+      const defaultKey = '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';
+      localStorage.setItem('coinvault_github_key', defaultKey);
+      setApiKeyState(defaultKey);
+      setApiKeySaved(true);
+    }
+  }, []);
   const [apiKey, setApiKeyState] = useState(localStorage.getItem('coinvault_github_key') || '');
   const [apiKeySaved, setApiKeySaved] = useState(hasApiKey());
   const [scanEmail, setScanEmail] = useState('');
