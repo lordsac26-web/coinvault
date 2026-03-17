@@ -87,11 +87,6 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Seed sample data on first load
-    const existing = getCollections();
-    if (existing.length === 0 && !initialized) {
-      const { saveCollections: sc, saveCoins: sco } = { saveCollections: require('../lib/storage').saveCollections, saveCoins: require('../lib/storage').saveCoins };
-    }
     load();
     setInitialized(true);
   }, []);
