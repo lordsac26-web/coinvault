@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+
 import { getCoins } from '@/components/storage';
 import { DollarSign, TrendingUp, TrendingDown, Minus, Coins } from 'lucide-react';
 
@@ -60,7 +60,7 @@ export default function PriceGuide() {
       ) : (
         <div className="space-y-3">
           {valuedCoins.map(coin => (
-            <Link key={coin.id} to={createPageUrl('CoinDetail') + '?id=' + coin.id}
+            <Link key={coin.id} to={`/coins/${coin.id}`}
               className="flex items-center gap-4 rounded-xl border border-[#c9a84c]/15 p-4 hover:border-[#c9a84c]/40 transition-all" style={{ background: 'rgba(255,255,255,0.02)' }}>
               <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-[#c9a84c]/5 flex items-center justify-center">
                 {coin.obverse_image ? (

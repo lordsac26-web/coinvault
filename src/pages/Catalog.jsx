@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+
 import { getCoins, getCollections } from '@/components/storage';
 import { Search, Coins, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -94,7 +94,7 @@ export default function Catalog() {
           {filtered.map(coin => {
             const col = collections.find(c => c.id === coin.collection_id);
             return (
-              <Link key={coin.id} to={createPageUrl('CoinDetail') + '?id=' + coin.id}
+              <Link key={coin.id} to={`/coins/${coin.id}`}
                 className="group rounded-xl border border-[#c9a84c]/15 overflow-hidden hover:border-[#c9a84c]/40 transition-all" style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <div className="aspect-square bg-gradient-to-br from-[#c9a84c]/5 to-[#0a0e1a] flex items-center justify-center overflow-hidden">
                   {coin.obverse_image ? (

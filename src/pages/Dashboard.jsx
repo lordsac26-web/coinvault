@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+
 import { getCollections, getCoins, createCollection, deleteCollection } from '@/components/storage';
 import { Plus, Trash2, FolderOpen, Coins, DollarSign, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -119,7 +119,7 @@ export default function Dashboard() {
             const colCoins = coins.filter(c => c.collection_id === col.id);
             return (
               <div key={col.id} className="group rounded-xl border border-[#c9a84c]/15 overflow-hidden hover:border-[#c9a84c]/40 transition-all" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <Link to={createPageUrl('CollectionView') + '?id=' + col.id}>
+                <Link to={`/collections/${col.id}`}>
                   <div className="h-32 bg-gradient-to-br from-[#c9a84c]/10 to-[#0a0e1a] flex items-center justify-center overflow-hidden">
                     {col.cover_image ? (
                       <img src={col.cover_image} alt="" className="w-full h-full object-cover" />
