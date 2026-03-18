@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+
 import { getCoinsByCollection, createCoin, deleteCoin, updateCollection } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
 import { Plus, Trash2, ArrowLeft, Upload, Coins } from 'lucide-react';
@@ -79,7 +79,7 @@ export default function CollectionView() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 text-center">
         <p className="text-[#f5f0e8]/50">Collection not found.</p>
-        <Link to={createPageUrl('Dashboard')} className="text-[#e8c97a] underline mt-4 inline-block">Back to Dashboard</Link>
+        <Link to="/dashboard" className="text-[#e8c97a] underline mt-4 inline-block">Back to Dashboard</Link>
       </div>
     );
   }
@@ -88,7 +88,7 @@ export default function CollectionView() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Link to={createPageUrl('Dashboard')} className="text-[#f5f0e8]/40 hover:text-[#e8c97a] transition-colors">
+        <Link to="/dashboard" className="text-[#f5f0e8]/40 hover:text-[#e8c97a] transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1">
@@ -147,7 +147,7 @@ export default function CollectionView() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {coins.map(coin => (
             <div key={coin.id} className="group rounded-xl border border-[#c9a84c]/15 overflow-hidden hover:border-[#c9a84c]/40 transition-all" style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <Link to={createPageUrl('CoinDetail') + '?id=' + coin.id}>
+              <Link to={`/coins/${coin.id}`}>
                 <div className="aspect-square bg-gradient-to-br from-[#c9a84c]/5 to-[#0a0e1a] flex items-center justify-center overflow-hidden">
                   {coin.obverse_image ? (
                     <img src={coin.obverse_image} alt="" className="w-full h-full object-contain p-2" />

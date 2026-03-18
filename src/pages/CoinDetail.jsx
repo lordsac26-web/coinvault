@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+
 import { getCoinById, updateCoin } from '@/components/storage';
 import { gradeCoin, enrichCoin, getMarketValue, hasApiKey } from '@/components/coinAI';
 import { base44 } from '@/api/base44Client';
@@ -73,7 +73,7 @@ export default function CoinDetail() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8 text-center">
         <p className="text-[#f5f0e8]/50">Coin not found.</p>
-        <Link to={createPageUrl('Dashboard')} className="text-[#e8c97a] underline mt-4 inline-block">Back</Link>
+        <Link to="/dashboard" className="text-[#e8c97a] underline mt-4 inline-block">Back</Link>
       </div>
     );
   }
@@ -81,7 +81,7 @@ export default function CoinDetail() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {/* Back */}
-      <Link to={createPageUrl('CollectionView') + '?id=' + coin.collection_id} className="inline-flex items-center gap-2 text-[#f5f0e8]/40 hover:text-[#e8c97a] mb-6 transition-colors">
+      <Link to={`/collections/${coin.collection_id}`} className="inline-flex items-center gap-2 text-[#f5f0e8]/40 hover:text-[#e8c97a] mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to collection
       </Link>
 
@@ -145,7 +145,7 @@ export default function CoinDetail() {
           <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-amber-300">AI features require an API key.</p>
-            <Link to={createPageUrl('Settings')} className="text-xs text-[#e8c97a] underline">Configure in Settings</Link>
+            <Link to="/settings" className="text-xs text-[#e8c97a] underline">Configure in Settings</Link>
           </div>
         </div>
       )}
