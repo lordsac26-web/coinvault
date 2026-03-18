@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { getCoinsByCollection, createCoin, deleteCoin, updateCollection } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
@@ -11,8 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export default function CollectionView() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const collectionId = urlParams.get('id');
+  const { id: collectionId } = useParams();
   const [collection, setCollection] = useState(null);
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);

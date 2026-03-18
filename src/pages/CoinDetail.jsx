@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { getCoinById, updateCoin } from '@/components/storage';
 import { gradeCoin, enrichCoin, getMarketValue, hasApiKey } from '@/components/coinAI';
@@ -11,8 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function CoinDetail() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const coinId = urlParams.get('id');
+  const { id: coinId } = useParams();
   const [coin, setCoin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(null); // 'grade' | 'enrich' | 'market' | null
