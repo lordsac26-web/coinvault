@@ -60,8 +60,8 @@ export default function AIGradingCard({ grading, onAccept, userGrade }) {
   const accepted = userGrade === grading.suggested_grade;
 
   return (
-    <div className="rounded-2xl border border-[#c9a84c]/30 overflow-hidden" style={{ background: 'rgba(17,24,39,0.8)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
-      <div className="flex items-center justify-between p-4 cursor-pointer bg-gradient-to-r from-[#c9a84c]/10 to-transparent" onClick={() => setExpanded(!expanded)}>
+    <div className="rounded-2xl border border-[#c9a84c]/20 overflow-hidden" style={{ background: 'rgba(17,24,39,0.8)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+      <div className="flex items-center justify-between p-4 cursor-pointer bg-gradient-to-r from-[#c9a84c]/8 to-transparent active:bg-[#c9a84c]/5" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-3">
           <Sparkles className="w-5 h-5 text-[#e8c97a]" />
           <div>
@@ -80,7 +80,7 @@ export default function AIGradingCard({ grading, onAccept, userGrade }) {
 
       {expanded && (
         <div className="p-4 space-y-4">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <AnalysisColumn title="Obverse Analysis" data={grading.obverse_analysis} />
             <AnalysisColumn title="Reverse Analysis" data={grading.reverse_analysis} />
           </div>
@@ -100,9 +100,9 @@ export default function AIGradingCard({ grading, onAccept, userGrade }) {
               <span className="text-sm text-blue-300">Professional submission (PCGS/NGC) recommended</span>
             </div>
           )}
-          <div className="flex gap-3 pt-1">
+          <div className="pt-1">
             <button onClick={() => onAccept(grading.suggested_grade)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${accepted ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-[#c9a84c]/20 text-[#e8c97a] border border-[#c9a84c]/30 hover:bg-[#c9a84c]/30'}`}>
+              className={`flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${accepted ? 'bg-green-500/15 text-green-400 border border-green-500/25' : 'bg-[#c9a84c]/15 text-[#e8c97a] border border-[#c9a84c]/25 hover:bg-[#c9a84c]/25 active:bg-[#c9a84c]/30'}`}>
               <CheckCircle className="w-4 h-4" />
               {accepted ? 'Grade Accepted' : `Accept AI Grade (${grading.suggested_grade})`}
             </button>

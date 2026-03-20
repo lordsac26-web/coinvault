@@ -5,14 +5,14 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import Layout from '@/components/Layout.jsx';
-import Dashboard from '@/pages/Dashboard.jsx';
-import CollectionView from '@/pages/CollectionView.jsx';
-import CoinDetail from '@/pages/CoinDetail.jsx';
-import Analytics from '@/pages/Analytics.jsx';
-import Settings from '@/pages/Settings.jsx';
-import Catalog from '@/pages/Catalog.jsx';
-import PriceGuide from '@/pages/PriceGuide.jsx';
+import Layout from '@/components/Layout';
+import Dashboard from '@/pages/Dashboard';
+import CollectionView from '@/pages/CollectionView';
+import CoinDetail from '@/pages/CoinDetail';
+import Analytics from '@/pages/Analytics';
+import Settings from '@/pages/Settings';
+import Catalog from '@/pages/Catalog';
+import PriceGuide from '@/pages/PriceGuide';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
