@@ -194,18 +194,22 @@ export default function CoinDetail() {
       </div>
 
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mb-5">
-        <Button onClick={handleGrade} disabled={aiLoading || !coin.obverse_image || !coin.reverse_image} className="bg-purple-600/15 text-purple-300 border border-purple-500/25 hover:bg-purple-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
-          {aiLoading === 'grade' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} AI Grade
-        </Button>
+        {!isSet && (
+          <Button onClick={handleGrade} disabled={aiLoading || !coin.obverse_image || !coin.reverse_image} className="bg-purple-600/15 text-purple-300 border border-purple-500/25 hover:bg-purple-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
+            {aiLoading === 'grade' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} AI Grade
+          </Button>
+        )}
         <Button onClick={handleEnrich} disabled={aiLoading} className="bg-blue-600/15 text-blue-300 border border-blue-500/25 hover:bg-blue-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
           {aiLoading === 'enrich' ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />} Enrich
         </Button>
         <Button onClick={handleMarketValue} disabled={aiLoading} className="bg-green-600/15 text-green-300 border border-green-500/25 hover:bg-green-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
           {aiLoading === 'market' ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />} Market
         </Button>
-        <Button variant="ghost" onClick={() => setShowPhotoGuide(!showPhotoGuide)} className="gap-2 h-10 rounded-xl text-sm" style={{ color: 'var(--cv-text-muted)' }}>
-          <Camera className="w-4 h-4" /> Tips
-        </Button>
+        {!isSet && (
+          <Button variant="ghost" onClick={() => setShowPhotoGuide(!showPhotoGuide)} className="gap-2 h-10 rounded-xl text-sm" style={{ color: 'var(--cv-text-muted)' }}>
+            <Camera className="w-4 h-4" /> Tips
+          </Button>
+        )}
         <Button onClick={() => setShowShare(true)} className="bg-amber-600/15 text-amber-300 border border-amber-500/25 hover:bg-amber-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
           <Share2 className="w-4 h-4" /> Share
         </Button>
