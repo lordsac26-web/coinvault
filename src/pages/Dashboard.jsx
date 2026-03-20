@@ -153,7 +153,7 @@ export default function Dashboard() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
-                  {['By Country', 'By Type', 'By Era', 'By Series', 'By Metal', 'Custom'].map(t => (
+                  {['By Country', 'By Type', 'By Era', 'By Series', 'By Metal', 'Proof Sets', 'Mint Sets', 'Custom'].map(t => (
                     <SelectItem key={t} value={t} style={{ color: 'var(--cv-text)' }}>{t}</SelectItem>
                   ))}
                 </SelectContent>
