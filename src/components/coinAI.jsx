@@ -136,3 +136,52 @@ Be specific with dollar amounts. Use recent real-world data.`,
   });
   return result;
 };
+
+export const analyzeSet = async (imageUrls, setType) => {
+  const typeLabel = setType === 'proof_set' ? 'proof set' : 'mint set';
+  const packagingDesc = setType === 'proof_set'
+    ? 'hard plastic/acrylic case with individually seated coins'
+    : 'soft plastic/cellophane packaging with coins in card holders';
+
+  const result = await base44.integrations.Core.InvokeLLM({
+    prompt: `You are an expert numismatist. Analyze these photos of a US ${typeLabel}. 
+This type of set typically comes in ${packagingDesc}.
+
+Identify the set from the images. Determine:
+1. The year of the set
+2. The country of origin
+3. The mint mark (S for proof sets, P/D for mint sets typically)
+4. Each individual coin/denomination included
+5. The overall condition and any notable features
+6. The composition of the coins (clad, silver, etc.)
+
+Provide accurate details based on what you can see in the images.`,
+    file_urls: imageUrls,
+    response_json_schema: {
+      type: "object",
+      properties: {
+        set_name: { type: "string", description: "Full name like '2023-S United States Proof Set'" },
+        year: { type: "string" },
+        country: { type: "string" },
+        mint_mark: { type: "string" },
+        composition: { type: "string", description: "Primary composition (e.g. 'Clad', 'Silver', 'Mixed')" },
+        condition_notes: { type: "string", description: "Overall condition assessment" },
+        coins_included: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              denomination: { type: "string", description: "e.g. '1 Cent', '5 Cents', '10 Cents'" },
+              description: { type: "string", description: "e.g. 'Lincoln Shield Penny'" }
+            }
+          },
+          description: "All individual coins in the set"
+        },
+        estimated_value: { type: "string", description: "Rough estimated value like '$35'" },
+        notes: { type: "string", description: "Any additional observations" }
+      }
+    },
+    model: "gemini_3_flash"
+  });
+  return result;
+};
