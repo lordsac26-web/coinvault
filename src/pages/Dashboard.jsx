@@ -11,51 +11,49 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 function StatCard({ label, value, icon: Icon, color }) {
   return (
-    <div className="rounded-2xl border border-[#c9a84c]/10 p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
+    <div className="rounded-2xl p-4 sm:p-5" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
       <div className="flex items-center gap-2 mb-2">
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`} style={{ background: 'currentColor', opacity: 0.12 }}>
           <Icon className={`w-3.5 h-3.5 ${color}`} />
         </div>
-        <span className="text-xs text-[#f5f0e8]/45 font-medium">{label}</span>
+        <span className="text-xs font-medium" style={{ color: 'var(--cv-text-secondary)' }}>{label}</span>
       </div>
-      <p className="text-xl sm:text-2xl font-bold text-[#f5f0e8] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{value}</p>
+      <p className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: 'var(--cv-text)', fontFamily: "'Playfair Display', Georgia, serif" }}>{value}</p>
     </div>
   );
 }
 
 function CollectionCard({ col, coinCount, onDelete }) {
   return (
-    <div className="group rounded-2xl border border-[#c9a84c]/10 overflow-hidden hover:border-[#c9a84c]/30 transition-all active:scale-[0.98]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+    <div className="group rounded-2xl overflow-hidden transition-all active:scale-[0.98]" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
       <Link to={`/collections/${col.id}`} className="block">
-        <div className="h-28 sm:h-36 bg-gradient-to-br from-[#c9a84c]/8 to-[#0a0e1a] flex items-center justify-center overflow-hidden">
+        <div className="h-28 sm:h-36 flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, var(--cv-gradient-from), var(--cv-gradient-to))` }}>
           {col.cover_image ? (
             <img src={col.cover_image} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
-            <Coins className="w-10 h-10 text-[#c9a84c]/15" />
+            <Coins className="w-10 h-10" style={{ color: 'var(--cv-text-faint)' }} />
           )}
         </div>
         <div className="p-3.5 sm:p-4">
-          <h3 className="font-semibold text-[#f5f0e8] text-sm sm:text-base truncate">{col.name}</h3>
-          <p className="text-xs text-[#f5f0e8]/35 mt-1">{coinCount} coin{coinCount !== 1 ? 's' : ''} · {col.type}</p>
+          <h3 className="font-semibold text-sm sm:text-base truncate" style={{ color: 'var(--cv-text)' }}>{col.name}</h3>
+          <p className="text-xs mt-1" style={{ color: 'var(--cv-text-muted)' }}>{coinCount} coin{coinCount !== 1 ? 's' : ''} · {col.type}</p>
         </div>
       </Link>
       <div className="px-3.5 pb-3 flex justify-end">
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <button className="p-1.5 -m-1.5 text-[#f5f0e8]/15 hover:text-red-400 transition-colors md:opacity-0 md:group-hover:opacity-100">
+            <button className="p-1.5 -m-1.5 hover:text-red-400 transition-colors md:opacity-0 md:group-hover:opacity-100" style={{ color: 'var(--cv-text-faint)' }}>
               <Trash2 className="w-4 h-4" />
             </button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="bg-[#0f1525] border-[#c9a84c]/20 text-[#f5f0e8] mx-4">
+          <AlertDialogContent className="mx-4" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete "{col.name}"?</AlertDialogTitle>
-              <AlertDialogDescription className="text-[#f5f0e8]/50">
-                This will delete the collection and all {coinCount} coins in it.
-              </AlertDialogDescription>
+              <AlertDialogDescription style={{ color: 'var(--cv-text-secondary)' }}>This will delete the collection and all {coinCount} coins in it.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8]">Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onDelete(col.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+              <AlertDialogCancel style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-border)', color: 'var(--cv-text)' }}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onDelete(col.id)} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -94,15 +92,12 @@ export default function Dashboard() {
     load();
   };
 
-  const handleDelete = async (id) => {
-    await deleteCollection(id);
-    load();
-  };
+  const handleDelete = async (id) => { await deleteCollection(id); load(); };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-[#c9a84c]/30 border-t-[#e8c97a] animate-spin" />
+        <div className="w-10 h-10 rounded-full border-4 animate-spin" style={{ borderColor: 'var(--cv-spinner-track)', borderTopColor: 'var(--cv-spinner-head)' }} />
       </div>
     );
   }
@@ -111,39 +106,39 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <StatCard label="Collections" value={collections.length} icon={FolderOpen} color="text-blue-400" />
-        <StatCard label="Total Coins" value={coins.length} icon={Coins} color="text-[#e8c97a]" />
+        <StatCard label="Total Coins" value={coins.length} icon={Coins} color="text-amber-400" />
         <StatCard label="Est. Value" value={`$${totalValue.toLocaleString()}`} icon={DollarSign} color="text-green-400" />
         <StatCard label="Graded" value={coins.filter(c => c.user_grade || c.ai_grade).length} icon={Star} color="text-purple-400" />
       </div>
 
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg sm:text-xl font-bold text-[#e8c97a]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>My Collections</h2>
+        <h2 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>My Collections</h2>
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-[#c9a84c] hover:bg-[#e8c97a] text-[#0a0e1a] gap-1.5 h-9 px-3 sm:px-4 text-sm font-semibold rounded-xl">
+            <Button size="sm" className="gap-1.5 h-9 px-3 sm:px-4 text-sm font-semibold rounded-xl" style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }}>
               <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New Collection</span><span className="sm:hidden">New</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#0f1525] border-[#c9a84c]/20 text-[#f5f0e8] mx-4 sm:mx-auto rounded-2xl">
+          <DialogContent className="mx-4 sm:mx-auto rounded-2xl" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
             <DialogHeader>
-              <DialogTitle className="text-[#e8c97a]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>New Collection</DialogTitle>
+              <DialogTitle style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>New Collection</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-2">
               <Input placeholder="Collection name" value={newCol.name} onChange={e => setNewCol({ ...newCol, name: e.target.value })}
-                className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] h-11 rounded-xl" />
+                className="h-11 rounded-xl" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
               <Textarea placeholder="Description (optional)" value={newCol.description} onChange={e => setNewCol({ ...newCol, description: e.target.value })}
-                className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] rounded-xl min-h-[80px]" />
+                className="rounded-xl min-h-[80px]" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
               <Select value={newCol.type} onValueChange={v => setNewCol({ ...newCol, type: v })}>
-                <SelectTrigger className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] h-11 rounded-xl">
+                <SelectTrigger className="h-11 rounded-xl" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1525] border-[#c9a84c]/20">
+                <SelectContent style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
                   {['By Country', 'By Type', 'By Era', 'By Series', 'By Metal', 'Custom'].map(t => (
-                    <SelectItem key={t} value={t} className="text-[#f5f0e8]">{t}</SelectItem>
+                    <SelectItem key={t} value={t} style={{ color: 'var(--cv-text)' }}>{t}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleCreate} className="w-full bg-[#c9a84c] hover:bg-[#e8c97a] text-[#0a0e1a] h-11 rounded-xl font-semibold">Create</Button>
+              <Button onClick={handleCreate} className="w-full h-11 rounded-xl font-semibold" style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }}>Create</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -151,21 +146,16 @@ export default function Dashboard() {
 
       {collections.length === 0 ? (
         <div className="text-center py-16 sm:py-24">
-          <div className="w-16 h-16 rounded-full bg-[#c9a84c]/5 flex items-center justify-center mx-auto mb-4">
-            <FolderOpen className="w-7 h-7 text-[#c9a84c]/25" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--cv-accent-bg)' }}>
+            <FolderOpen className="w-7 h-7" style={{ color: 'var(--cv-text-faint)' }} />
           </div>
-          <p className="text-[#f5f0e8]/35 text-sm">No collections yet</p>
-          <p className="text-[#f5f0e8]/20 text-xs mt-1">Tap "New" to create your first collection</p>
+          <p className="text-sm" style={{ color: 'var(--cv-text-muted)' }}>No collections yet</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--cv-text-faint)' }}>Tap "New" to create your first collection</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {collections.map(col => (
-            <CollectionCard
-              key={col.id}
-              col={col}
-              coinCount={coins.filter(c => c.collection_id === col.id).length}
-              onDelete={handleDelete}
-            />
+            <CollectionCard key={col.id} col={col} coinCount={coins.filter(c => c.collection_id === col.id).length} onDelete={handleDelete} />
           ))}
         </div>
       )}

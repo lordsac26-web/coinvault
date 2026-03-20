@@ -4,6 +4,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { ThemeProvider } from '@/lib/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
@@ -19,10 +20,10 @@ const AuthenticatedApp = () => {
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#0a0e1a]">
+      <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'var(--cv-bg, #0a0e1a)' }}>
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full border-4 border-[#c9a84c]/30 border-t-[#e8c97a] animate-spin" />
-          <p className="text-sm text-[#f5f0e8]/40" style={{ fontFamily: 'serif' }}>Loading CoinVault...</p>
+          <div className="w-12 h-12 rounded-full border-4 animate-spin" style={{ borderColor: 'var(--cv-spinner-track, rgba(201,168,76,0.3))', borderTopColor: 'var(--cv-spinner-head, #e8c97a)' }} />
+          <p className="text-sm" style={{ fontFamily: 'serif', color: 'var(--cv-text-muted, rgba(245,240,232,0.4))' }}>Loading CoinVault...</p>
         </div>
       </div>
     );
@@ -54,12 +55,14 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </ThemeProvider>
     </AuthProvider>
   )
 }

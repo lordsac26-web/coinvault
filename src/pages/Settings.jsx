@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { getSettings, saveSettings, exportAllData, exportToCSV } from '@/components/storage';
-import { Download, Check, Loader2, Sparkles } from 'lucide-react';
+import { Download, Sparkles, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { useTheme } from '@/lib/ThemeContext';
 
 export default function Settings() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const { themeKey, setTheme, themes } = useTheme();
 
   useEffect(() => {
     const load = async () => {
@@ -22,12 +22,8 @@ export default function Settings() {
 
   const save = async (updates) => {
     if (!settings) return;
-    setSaving(true);
     await saveSettings(settings.id, updates);
     setSettings({ ...settings, ...updates });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   const handleExportJSON = async () => {
@@ -51,52 +47,78 @@ export default function Settings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 rounded-full border-4 border-[#c9a84c]/30 border-t-[#e8c97a] animate-spin" />
+        <div className="w-10 h-10 rounded-full border-4 animate-spin" style={{ borderColor: 'var(--cv-spinner-track)', borderTopColor: 'var(--cv-spinner-head)' }} />
       </div>
     );
   }
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-      <h1 className="text-xl sm:text-2xl font-bold text-[#e8c97a] mb-5 sm:mb-8" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Settings</h1>
+      <h1 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-8" style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>Settings</h1>
 
-      <div className="rounded-2xl border border-[#c9a84c]/10 p-4 sm:p-5 mb-4 sm:mb-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="w-4 h-4 text-[#e8c97a]" />
-          <h3 className="font-semibold text-[#f5f0e8] text-sm sm:text-base">AI Features</h3>
-          <span className="text-[11px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded-md font-medium">Built-in</span>
+      {/* Theme Picker */}
+      <div className="rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+        <div className="flex items-center gap-2 mb-4">
+          <Palette className="w-4 h-4" style={{ color: 'var(--cv-accent)' }} />
+          <h3 className="font-semibold text-sm sm:text-base" style={{ color: 'var(--cv-text)' }}>Theme</h3>
         </div>
-        <p className="text-xs text-[#f5f0e8]/35 leading-relaxed">AI grading, enrichment, and market values are powered by Base44's built-in AI with real-time internet search. No API key needed.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {Object.entries(themes).map(([key, theme]) => (
+            <button key={key} onClick={() => setTheme(key)}
+              className="rounded-xl p-3 text-left transition-all"
+              style={{
+                border: themeKey === key ? '2px solid var(--cv-accent)' : '1px solid var(--cv-border)',
+                background: themeKey === key ? 'var(--cv-accent-bg)' : 'var(--cv-bg-card)',
+              }}>
+              <div className="flex gap-1 mb-2">
+                {theme.preview.map((c, i) => (
+                  <div key={i} className="w-4 h-4 rounded-full border border-white/10" style={{ background: c }} />
+                ))}
+              </div>
+              <p className="text-xs font-semibold" style={{ color: 'var(--cv-text)' }}>{theme.name}</p>
+              <p className="text-[10px]" style={{ color: 'var(--cv-text-muted)' }}>{theme.desc}</p>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-[#c9a84c]/10 p-4 sm:p-5 mb-4 sm:mb-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <h3 className="font-semibold text-[#f5f0e8] text-sm sm:text-base mb-4">Preferences</h3>
+      <div className="rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="w-4 h-4" style={{ color: 'var(--cv-accent)' }} />
+          <h3 className="font-semibold text-sm sm:text-base" style={{ color: 'var(--cv-text)' }}>AI Features</h3>
+          <span className="text-[11px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded-md font-medium">Built-in</span>
+        </div>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--cv-text-muted)' }}>AI grading, enrichment, and market values are powered by Base44's built-in AI. No API key needed.</p>
+      </div>
+
+      <div className="rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+        <h3 className="font-semibold text-sm sm:text-base mb-4" style={{ color: 'var(--cv-text)' }}>Preferences</h3>
         <div className="space-y-5">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm text-[#f5f0e8]">Auto-enrich new coins</p>
-              <p className="text-xs text-[#f5f0e8]/35 mt-0.5">Automatically fetch historical data</p>
+              <p className="text-sm" style={{ color: 'var(--cv-text)' }}>Auto-enrich new coins</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--cv-text-muted)' }}>Automatically fetch historical data</p>
             </div>
             <Switch checked={settings?.ai_auto_enrich || false} onCheckedChange={v => save({ ai_auto_enrich: v })} />
           </div>
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm text-[#f5f0e8]">Currency</p>
-              <p className="text-xs text-[#f5f0e8]/35 mt-0.5">Display currency for values</p>
+              <p className="text-sm" style={{ color: 'var(--cv-text)' }}>Currency</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--cv-text-muted)' }}>Display currency for values</p>
             </div>
             <Input value={settings?.currency || 'USD'} onChange={e => save({ currency: e.target.value })}
-              className="w-20 bg-white/5 border-[#c9a84c]/15 text-[#f5f0e8] text-center h-10 rounded-xl shrink-0" />
+              className="w-20 text-center h-10 rounded-xl shrink-0" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#c9a84c]/10 p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <h3 className="font-semibold text-[#f5f0e8] text-sm sm:text-base mb-4">Export Data</h3>
+      <div className="rounded-2xl p-4 sm:p-5" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+        <h3 className="font-semibold text-sm sm:text-base mb-4" style={{ color: 'var(--cv-text)' }}>Export Data</h3>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <Button onClick={handleExportJSON} variant="outline" className="border-[#c9a84c]/15 text-[#f5f0e8] hover:bg-[#c9a84c]/10 gap-2 h-11 rounded-xl justify-center">
+          <Button onClick={handleExportJSON} variant="outline" className="gap-2 h-11 rounded-xl justify-center" style={{ border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
             <Download className="w-4 h-4" /> JSON Backup
           </Button>
-          <Button onClick={handleExportCSV} variant="outline" className="border-[#c9a84c]/15 text-[#f5f0e8] hover:bg-[#c9a84c]/10 gap-2 h-11 rounded-xl justify-center">
+          <Button onClick={handleExportCSV} variant="outline" className="gap-2 h-11 rounded-xl justify-center" style={{ border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
             <Download className="w-4 h-4" /> CSV Export
           </Button>
         </div>
