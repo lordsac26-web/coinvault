@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ImageCropper from '@/components/ImageCropper';
 import CollectionTags from '@/components/CollectionTags';
 import AddSetDialog from '@/components/AddSetDialog';
+import { isMultiImageType, getEntryLabel } from '@/lib/entryTypes';
 
 export default function CollectionView() {
   const { id: collectionId } = useParams();
@@ -256,10 +257,10 @@ export default function CollectionView() {
                   ) : (
                     <Coins className="w-8 h-8" style={{ color: 'var(--cv-text-faint)' }} />
                   )}
-                  {(coin.entry_type === 'proof_set' || coin.entry_type === 'mint_set') && (
+                  {coin.entry_type && coin.entry_type !== 'coin' && (
                     <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-semibold"
                       style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }}>
-                      {coin.entry_type === 'proof_set' ? 'Proof Set' : 'Mint Set'}
+                      {getEntryLabel(coin.entry_type)}
                     </span>
                   )}
                 </div>
@@ -268,8 +269,8 @@ export default function CollectionView() {
                     {coin.set_name || `${coin.year} ${coin.denomination}`}
                   </h3>
                   <p className="text-xs truncate" style={{ color: 'var(--cv-text-muted)' }}>
-                    {coin.entry_type === 'proof_set' || coin.entry_type === 'mint_set'
-                      ? `${coin.country || ''}${coin.set_contents?.length ? ` · ${coin.set_contents.length} coins` : ''}`
+                    {isMultiImageType(coin.entry_type)
+                      ? `${coin.country || ''}${coin.set_contents?.length ? ` · ${coin.set_contents.length} items` : ''}`
                       : `${coin.country}${coin.user_grade ? ` · ${coin.user_grade}` : ''}`
                     }
                   </p>
