@@ -4,7 +4,7 @@ import { getCoinById, updateCoin } from '@/components/storage';
 import { gradeCoin, enrichCoin, getMarketValue } from '@/components/coinAI';
 import AIGradingCard from '@/components/AIGradingCard';
 import CoinPhotoGuide from '@/components/CoinPhotoGuide';
-import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera, Share2, Pencil } from 'lucide-react';
+import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera, Share2, Pencil, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import CoinShareCard from '@/components/CoinShareCard';
 import ImageCropper from '@/components/ImageCropper';
 import { base44 } from '@/api/base44Client';
@@ -21,6 +21,7 @@ export default function CoinDetail() {
   const [editingPhoto, setEditingPhoto] = useState(null); // 'obverse_image' | 'reverse_image'
   const [cropFile, setCropFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [activeSetImage, setActiveSetImage] = useState(0);
 
   useEffect(() => {
     const load = async () => { setLoading(true); const c = await getCoinById(coinId); setCoin(c); setLoading(false); };
@@ -50,6 +51,8 @@ export default function CoinDetail() {
 
   const handleCancelCrop = () => { setEditingPhoto(null); setCropFile(null); };
 
+  const isSet = coin?.entry_type === 'proof_set' || coin?.entry_type === 'mint_set';
+
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-10 h-10 rounded-full border-4 animate-spin" style={{ borderColor: 'var(--cv-spinner-track)', borderTopColor: 'var(--cv-spinner-head)' }} /></div>;
   if (!coin) return <div className="max-w-7xl mx-auto px-4 py-8 text-center"><p style={{ color: 'var(--cv-text-secondary)' }}>Coin not found.</p><Link to="/dashboard" className="underline mt-4 inline-block" style={{ color: 'var(--cv-accent)' }}>Back</Link></div>;
 
@@ -58,28 +61,101 @@ export default function CoinDetail() {
       <Link to={`/collections/${coin.collection_id}`} className="inline-flex items-center gap-2 mb-4 sm:mb-6 transition-colors py-1" style={{ color: 'var(--cv-text-muted)' }}>
         <ArrowLeft className="w-4 h-4" /> Back to collection
       </Link>
+
+      {isSet && (
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold mb-3"
+          style={{ background: 'var(--cv-accent-bg)', color: 'var(--cv-accent)', border: '1px solid var(--cv-accent-border)' }}>
+          <Package className="w-3.5 h-3.5" />
+          {coin.entry_type === 'proof_set' ? 'Proof Set' : 'Mint Set'}
+        </div>
+      )}
+
       <h1 className="text-xl sm:text-2xl font-bold mb-5" style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>
-        {coin.year} {coin.denomination} {coin.country && `(${coin.country})`}
+        {isSet ? (coin.set_name || `${coin.year} ${coin.denomination}`) : `${coin.year} ${coin.denomination} ${coin.country && `(${coin.country})`}`}
       </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        {['obverse_image', 'reverse_image'].map(key => (
-          <div key={key} className="relative group aspect-square rounded-2xl overflow-hidden flex items-center justify-center" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
-            {coin[key] ? <img src={coin[key]} alt={key.replace('_', ' ')} className="w-full h-full object-contain p-4 sm:p-6" /> : (
-              <div className="text-center"><Camera className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--cv-text-faint)' }} /><span className="text-xs" style={{ color: 'var(--cv-text-faint)' }}>{key === 'obverse_image' ? 'Obverse' : 'Reverse'}</span></div>
-            )}
-            <label className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all cursor-pointer">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-1.5">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--cv-accent-dim)' }}>
-                  <Pencil className="w-4 h-4" style={{ color: 'var(--cv-accent-text)' }} />
+      {/* Set image gallery */}
+      {isSet && coin.set_images?.length > 0 ? (
+        <div className="mb-6 sm:mb-8">
+          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+            <img src={coin.set_images[activeSetImage]} alt={`Set photo ${activeSetImage + 1}`} className="w-full h-full object-contain p-4 sm:p-6" />
+            {coin.set_images.length > 1 && (
+              <>
+                <button onClick={() => setActiveSetImage(i => (i - 1 + coin.set_images.length) % coin.set_images.length)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-border)' }}>
+                  <ChevronLeft className="w-4 h-4" style={{ color: 'var(--cv-text)' }} />
+                </button>
+                <button onClick={() => setActiveSetImage(i => (i + 1) % coin.set_images.length)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-border)' }}>
+                  <ChevronRight className="w-4 h-4" style={{ color: 'var(--cv-text)' }} />
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {coin.set_images.map((_, i) => (
+                    <button key={i} onClick={() => setActiveSetImage(i)}
+                      className="w-2 h-2 rounded-full transition-all"
+                      style={{ background: i === activeSetImage ? 'var(--cv-accent)' : 'var(--cv-text-faint)', opacity: i === activeSetImage ? 1 : 0.4 }} />
+                  ))}
                 </div>
-                <span className="text-xs font-medium text-white">{coin[key] ? 'Change Photo' : 'Add Photo'}</span>
-              </div>
-              <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handlePhotoSelect(key, e.target.files[0]); e.target.value = ''; }} />
-            </label>
+              </>
+            )}
           </div>
-        ))}
-      </div>
+          {coin.set_images.length > 1 && (
+            <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
+              {coin.set_images.map((url, i) => (
+                <button key={i} onClick={() => setActiveSetImage(i)}
+                  className="w-16 h-16 rounded-lg overflow-hidden shrink-0 transition-all"
+                  style={{ border: i === activeSetImage ? '2px solid var(--cv-accent)' : '1px solid var(--cv-border)', opacity: i === activeSetImage ? 1 : 0.6 }}>
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : !isSet ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          {['obverse_image', 'reverse_image'].map(key => (
+            <div key={key} className="relative group aspect-square rounded-2xl overflow-hidden flex items-center justify-center" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+              {coin[key] ? <img src={coin[key]} alt={key.replace('_', ' ')} className="w-full h-full object-contain p-4 sm:p-6" /> : (
+                <div className="text-center"><Camera className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--cv-text-faint)' }} /><span className="text-xs" style={{ color: 'var(--cv-text-faint)' }}>{key === 'obverse_image' ? 'Obverse' : 'Reverse'}</span></div>
+              )}
+              <label className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all cursor-pointer">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-1.5">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--cv-accent-dim)' }}>
+                    <Pencil className="w-4 h-4" style={{ color: 'var(--cv-accent-text)' }} />
+                  </div>
+                  <span className="text-xs font-medium text-white">{coin[key] ? 'Change Photo' : 'Add Photo'}</span>
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handlePhotoSelect(key, e.target.files[0]); e.target.value = ''; }} />
+              </label>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Set contents list */}
+      {isSet && coin.set_contents?.length > 0 && (
+        <div className="rounded-2xl p-4 sm:p-5 mb-5" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+          <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--cv-accent)' }}>
+            Coins in Set ({coin.set_contents.length})
+          </h3>
+          <div className="space-y-1.5">
+            {coin.set_contents.map((c, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: 'var(--cv-input-bg)' }}>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                  style={{ background: 'var(--cv-accent-bg)', color: 'var(--cv-accent)' }}>
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium" style={{ color: 'var(--cv-text)' }}>{c.denomination}</span>
+                  {c.description && <p className="text-xs truncate" style={{ color: 'var(--cv-text-muted)' }}>{c.description}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Photo cropper dialog */}
       {editingPhoto && cropFile && (
