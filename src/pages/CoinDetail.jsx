@@ -4,7 +4,8 @@ import { getCoinById, updateCoin } from '@/components/storage';
 import { gradeCoin, enrichCoin, getMarketValue } from '@/components/coinAI';
 import AIGradingCard from '@/components/AIGradingCard';
 import CoinPhotoGuide from '@/components/CoinPhotoGuide';
-import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera } from 'lucide-react';
+import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera, Share2 } from 'lucide-react';
+import CoinShareCard from '@/components/CoinShareCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -14,6 +15,7 @@ export default function CoinDetail() {
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(null);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
   useEffect(() => {
     const load = async () => { setLoading(true); const c = await getCoinById(coinId); setCoin(c); setLoading(false); };
@@ -78,9 +80,13 @@ export default function CoinDetail() {
         <Button variant="ghost" onClick={() => setShowPhotoGuide(!showPhotoGuide)} className="gap-2 h-10 rounded-xl text-sm" style={{ color: 'var(--cv-text-muted)' }}>
           <Camera className="w-4 h-4" /> Tips
         </Button>
+        <Button onClick={() => setShowShare(true)} className="bg-amber-600/15 text-amber-300 border border-amber-500/25 hover:bg-amber-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
+          <Share2 className="w-4 h-4" /> Share
+        </Button>
       </div>
 
       {showPhotoGuide && <div className="mb-5"><CoinPhotoGuide onClose={() => setShowPhotoGuide(false)} /></div>}
+      {showShare && <CoinShareCard coin={coin} onClose={() => setShowShare(false)} />}
 
       <Tabs defaultValue="grading" className="space-y-3">
         <TabsList className="rounded-xl h-10 p-1 w-full sm:w-auto" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-border)' }}>
