@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Plus, Trash2, ArrowLeft, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
@@ -104,8 +105,34 @@ export default function CollectionView() {
             <div className="space-y-3 mt-2">
               <div className="grid grid-cols-2 gap-3">
                 <Input placeholder="Country" value={newCoin.country} onChange={e => setNewCoin({ ...newCoin, country: e.target.value })} className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] h-11 rounded-xl" />
-                <Input placeholder="Denomination" value={newCoin.denomination} onChange={e => setNewCoin({ ...newCoin, denomination: e.target.value })} className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] h-11 rounded-xl" />
+                <Select value={newCoin.denomination} onValueChange={v => setNewCoin({ ...newCoin, denomination: v })}>
+                  <SelectTrigger className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] h-11 rounded-xl">
+                    <SelectValue placeholder="Denomination" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0f1525] border-[#c9a84c]/20 max-h-60">
+                    {[
+                      '1 Cent (Penny)', '5 Cents (Nickel)', '10 Cents (Dime)', '25 Cents (Quarter)',
+                      '50 Cents (Half Dollar)', '1 Dollar', '1 Dollar (Silver)', '1 Dollar (Gold)',
+                      '$2.50 (Quarter Eagle)', '$5 (Half Eagle)', '$10 (Eagle)', '$20 (Double Eagle)',
+                      '1 Penny', '2 Pence', '5 Pence', '10 Pence', '20 Pence', '50 Pence', '1 Pound', '2 Pounds',
+                      '1 Euro Cent', '2 Euro Cent', '5 Euro Cent', '10 Euro Cent', '20 Euro Cent', '50 Euro Cent', '1 Euro', '2 Euro',
+                      '1 Yen', '5 Yen', '10 Yen', '50 Yen', '100 Yen', '500 Yen',
+                      '1 Franc', '2 Franc', '5 Franc',
+                      '1 Mark', '2 Mark', '5 Mark',
+                      '1 Real', '5 Centavos', '10 Centavos', '25 Centavos', '50 Centavos',
+                      '1 Rupee', '2 Rupees', '5 Rupees', '10 Rupees',
+                      '1 Yuan', '5 Jiao',
+                      '1 Peso', '5 Pesos', '10 Pesos',
+                    ].map(d => (
+                      <SelectItem key={d} value={d} className="text-[#f5f0e8]">{d}</SelectItem>
+                    ))}
+                    <SelectItem value="__custom" className="text-[#e8c97a]">Custom...</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              {newCoin.denomination === '__custom' && (
+                <Input placeholder="Enter custom denomination" value="" onChange={e => setNewCoin({ ...newCoin, denomination: e.target.value })} className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] h-11 rounded-xl" autoFocus />
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <Input placeholder="Year" value={newCoin.year} onChange={e => setNewCoin({ ...newCoin, year: e.target.value })} className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] h-11 rounded-xl" />
                 <Input placeholder="Mint Mark" value={newCoin.mint_mark} onChange={e => setNewCoin({ ...newCoin, mint_mark: e.target.value })} className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] h-11 rounded-xl" />
