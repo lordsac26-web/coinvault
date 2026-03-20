@@ -48,9 +48,10 @@ Provide your analysis in the exact JSON structure below. Be thorough but concise
 
 export const enrichCoin = async (coinData) => {
   const coinDesc = [
-    coinData.country, coinData.year, coinData.denomination,
+    coinData.set_name, coinData.country, coinData.year, coinData.denomination,
     coinData.mint_mark && coinData.mint_mark !== 'None' ? `Mint: ${coinData.mint_mark}` : '',
-    coinData.coin_series, coinData.composition
+    coinData.coin_series, coinData.composition,
+    coinData.entry_type && coinData.entry_type !== 'coin' ? `Type: ${coinData.entry_type.replace('_', ' ')}` : '',
   ].filter(Boolean).join(', ');
 
   const result = await base44.integrations.Core.InvokeLLM({
@@ -81,9 +82,10 @@ Search for information from numismatic databases, PCGS CoinFacts, NGC, Numista, 
 
 export const getMarketValue = async (coinData) => {
   const coinDesc = [
-    coinData.country, coinData.year, coinData.denomination,
+    coinData.set_name, coinData.country, coinData.year, coinData.denomination,
     coinData.mint_mark && coinData.mint_mark !== 'None' ? `Mint: ${coinData.mint_mark}` : '',
-    coinData.user_grade, coinData.coin_series
+    coinData.user_grade, coinData.coin_series, coinData.composition,
+    coinData.entry_type && coinData.entry_type !== 'coin' ? `Type: ${coinData.entry_type.replace('_', ' ')}` : '',
   ].filter(Boolean).join(', ');
 
   const result = await base44.integrations.Core.InvokeLLM({
