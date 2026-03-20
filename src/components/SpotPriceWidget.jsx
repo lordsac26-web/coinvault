@@ -178,6 +178,7 @@ export default function SpotPriceWidget({ onClose }) {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-xs font-bold text-[#f5f0e8] tabular-nums">{m.price}</span>
+                        {m.unit && <span className="text-[9px] text-[#f5f0e8]/30 font-medium">/{m.unit.replace('per ', '')}</span>}
                         {m.change_24h && (
                           <span className={`text-[10px] font-medium tabular-nums ${isUp ? 'text-green-400' : isDown ? 'text-red-400' : 'text-[#f5f0e8]/30'}`}>
                             {m.change_24h}
