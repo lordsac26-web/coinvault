@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getCoinById, updateCoin } from '@/components/storage';
-import { gradeCoin, enrichCoin, getMarketValue, hasApiKey } from '@/components/coinAI';
+import { gradeCoin, enrichCoin, getMarketValue } from '@/components/coinAI';
 import AIGradingCard from '@/components/AIGradingCard';
 import CoinPhotoGuide from '@/components/CoinPhotoGuide';
-import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -13,7 +13,6 @@ export default function CoinDetail() {
   const [coin, setCoin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(null);
-  const [apiKeyReady, setApiKeyReady] = useState(false);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
 
   useEffect(() => {
@@ -21,8 +20,6 @@ export default function CoinDetail() {
       setLoading(true);
       const c = await getCoinById(coinId);
       setCoin(c);
-      const keyOk = await hasApiKey();
-      setApiKeyReady(keyOk);
       setLoading(false);
     };
     if (coinId) load();
@@ -132,28 +129,18 @@ export default function CoinDetail() {
         )}
       </div>
 
-      {!apiKeyReady && (
-        <div className="rounded-2xl border border-amber-500/15 p-4 mb-5 flex items-start gap-3" style={{ background: 'rgba(245,158,11,0.04)' }}>
-          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm text-amber-300">AI features require an API key.</p>
-            <Link to="/settings" className="text-xs text-[#e8c97a] underline mt-1 inline-block">Configure in Settings</Link>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 mb-5">
-        <Button onClick={handleGrade} disabled={!apiKeyReady || aiLoading || !coin.obverse_image || !coin.reverse_image}
+        <Button onClick={handleGrade} disabled={aiLoading || !coin.obverse_image || !coin.reverse_image}
           className="bg-purple-600/15 text-purple-300 border border-purple-500/25 hover:bg-purple-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
           {aiLoading === 'grade' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
           AI Grade
         </Button>
-        <Button onClick={handleEnrich} disabled={!apiKeyReady || aiLoading}
+        <Button onClick={handleEnrich} disabled={aiLoading}
           className="bg-blue-600/15 text-blue-300 border border-blue-500/25 hover:bg-blue-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
           {aiLoading === 'enrich' ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
           Enrich
         </Button>
-        <Button onClick={handleMarketValue} disabled={!apiKeyReady || aiLoading}
+        <Button onClick={handleMarketValue} disabled={aiLoading}
           className="bg-green-600/15 text-green-300 border border-green-500/25 hover:bg-green-600/25 gap-2 h-10 rounded-xl text-sm font-medium">
           {aiLoading === 'market' ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
           Market
