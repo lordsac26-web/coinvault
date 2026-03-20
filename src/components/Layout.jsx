@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, Menu } from 'lucide-react';
+import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, Menu, CircleDollarSign } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import SpotPriceWidget from '@/components/SpotPriceWidget';
 
 const navItems = [
   { label: 'Collections', path: '/dashboard', icon: LayoutGrid },
@@ -13,6 +15,15 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
+  const [showSpotWidget, setShowSpotWidget] = useState(() => {
+    return localStorage.getItem('spotWidgetEnabled') === 'true';
+  });
+
+  const toggleSpotWidget = () => {
+    const next = !showSpotWidget;
+    setShowSpotWidget(next);
+    localStorage.setItem('spotWidgetEnabled', String(next));
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0e1a] text-[#f5f0e8]" style={{ fontFamily: "'Source Sans 3', 'Source Sans Pro', sans-serif" }}>
@@ -42,6 +53,14 @@ export default function Layout() {
                 {label}
               </Link>
             ))}
+            <button
+              onClick={toggleSpotWidget}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ml-1 ${showSpotWidget ? 'text-[#e8c97a] bg-[#c9a84c]/10' : 'text-[#f5f0e8]/50 hover:text-[#f5f0e8] hover:bg-white/5'}`}
+              title="Toggle spot prices"
+            >
+              <CircleDollarSign className="w-4 h-4" />
+              Spot
+            </button>
           </div>
         </div>
       </nav>
@@ -72,6 +91,9 @@ export default function Layout() {
           ))}
         </div>
       </nav>
+
+      {/* Spot Price Widget */}
+      {showSpotWidget && <SpotPriceWidget onClose={toggleSpotWidget} />}
 
       {/* Content */}
       <main className="pt-12 md:pt-14 pb-20 md:pb-0 relative z-10">
