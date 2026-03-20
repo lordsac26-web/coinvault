@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getCoinsByCollection, createCoin, deleteCoin } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, ArrowLeft, Coins, FileDown, Loader2, ImageIcon, Crop } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Coins, FileDown, Loader2, ImageIcon, Crop, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import ImageCropper from '@/components/ImageCropper';
 import CollectionTags from '@/components/CollectionTags';
+import AddSetDialog from '@/components/AddSetDialog';
 
 export default function CollectionView() {
   const { id: collectionId } = useParams();
@@ -154,6 +155,7 @@ export default function CollectionView() {
               </div>
             </DialogContent>
           </Dialog>
+          <AddSetDialog collectionId={collectionId} onAdded={load} />
           {/* Add Coin */}
           <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) { setCroppingField(null); setCropFile(null); } }}>
             <DialogTrigger asChild>
@@ -248,16 +250,29 @@ export default function CollectionView() {
           {coins.map(coin => (
             <div key={coin.id} className="group rounded-2xl overflow-hidden transition-all active:scale-[0.98]" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
               <Link to={`/coins/${coin.id}`}>
-                <div className="aspect-square flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, var(--cv-gradient-from), var(--cv-gradient-to))` }}>
+                <div className="aspect-square flex items-center justify-center overflow-hidden relative" style={{ background: `linear-gradient(135deg, var(--cv-gradient-from), var(--cv-gradient-to))` }}>
                   {coin.obverse_image ? (
                     <img src={coin.obverse_image} alt="" className="w-full h-full object-contain p-3" loading="lazy" />
                   ) : (
                     <Coins className="w-8 h-8" style={{ color: 'var(--cv-text-faint)' }} />
                   )}
+                  {(coin.entry_type === 'proof_set' || coin.entry_type === 'mint_set') && (
+                    <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                      style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }}>
+                      {coin.entry_type === 'proof_set' ? 'Proof Set' : 'Mint Set'}
+                    </span>
+                  )}
                 </div>
                 <div className="p-3">
-                  <h3 className="font-medium text-sm truncate" style={{ color: 'var(--cv-text)' }}>{coin.year} {coin.denomination}</h3>
-                  <p className="text-xs truncate" style={{ color: 'var(--cv-text-muted)' }}>{coin.country}{coin.user_grade ? ` · ${coin.user_grade}` : ''}</p>
+                  <h3 className="font-medium text-sm truncate" style={{ color: 'var(--cv-text)' }}>
+                    {coin.set_name || `${coin.year} ${coin.denomination}`}
+                  </h3>
+                  <p className="text-xs truncate" style={{ color: 'var(--cv-text-muted)' }}>
+                    {coin.entry_type === 'proof_set' || coin.entry_type === 'mint_set'
+                      ? `${coin.country || ''}${coin.set_contents?.length ? ` · ${coin.set_contents.length} coins` : ''}`
+                      : `${coin.country}${coin.user_grade ? ` · ${coin.user_grade}` : ''}`
+                    }
+                  </p>
                 </div>
               </Link>
               <div className="px-3 pb-2.5 flex justify-end">
