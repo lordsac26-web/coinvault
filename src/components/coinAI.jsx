@@ -137,45 +137,72 @@ Be specific with dollar amounts. Use recent real-world data.`,
   return result;
 };
 
-export const analyzeSet = async (imageUrls, setType) => {
-  const typeLabel = setType === 'proof_set' ? 'proof set' : 'mint set';
-  const packagingDesc = setType === 'proof_set'
-    ? 'hard plastic/acrylic case with individually seated coins'
-    : 'soft plastic/cellophane packaging with coins in card holders';
+export const analyzeItem = async (imageUrls, entryType) => {
+  const typePrompts = {
+    proof_set: {
+      label: 'proof set',
+      detail: 'This is a proof set, typically in a hard plastic/acrylic case with individually seated coins. Identify every coin/denomination included.',
+    },
+    mint_set: {
+      label: 'mint set',
+      detail: 'This is a mint set, typically in soft plastic/cellophane packaging. Identify every coin/denomination included.',
+    },
+    bullion: {
+      label: 'bullion coin or bar',
+      detail: 'This is a bullion item (gold, silver, platinum, or palladium coin/bar/round). Identify the metal, purity, weight, and mint/manufacturer.',
+    },
+    roll: {
+      label: 'roll of coins',
+      detail: 'This is a roll (or partial roll) of coins. Identify the denomination, year(s) visible, mint mark, and estimate how many coins are in the roll.',
+    },
+    commemorative: {
+      label: 'commemorative coin or medal',
+      detail: 'This is a commemorative coin or medal. Identify the event/theme it commemorates, issuing authority, and any special features.',
+    },
+    paper_currency: {
+      label: 'paper currency / banknote',
+      detail: 'This is paper currency (banknote, silver certificate, federal reserve note, etc.). Identify the denomination, series year, serial number if visible, seal color, and any notable features.',
+    },
+  };
+
+  const cfg = typePrompts[entryType] || typePrompts.proof_set;
 
   const result = await base44.integrations.Core.InvokeLLM({
-    prompt: `You are an expert numismatist. Analyze these photos of a US ${typeLabel}. 
-This type of set typically comes in ${packagingDesc}.
+    prompt: `You are an expert numismatist and collectibles appraiser. Analyze these photos of a ${cfg.label}.
+${cfg.detail}
 
-Identify the set from the images. Determine:
-1. The year of the set
-2. The country of origin
-3. The mint mark (S for proof sets, P/D for mint sets typically)
-4. Each individual coin/denomination included
-5. The overall condition and any notable features
-6. The composition of the coins (clad, silver, etc.)
+Determine:
+1. A descriptive name for this item
+2. The year / date
+3. The country of origin
+4. Mint mark (if applicable)
+5. Composition / material
+6. Overall condition assessment
+7. Individual pieces included (if it's a set or roll)
+8. Estimated market value
 
 Provide accurate details based on what you can see in the images.`,
     file_urls: imageUrls,
     response_json_schema: {
       type: "object",
       properties: {
-        set_name: { type: "string", description: "Full name like '2023-S United States Proof Set'" },
+        set_name: { type: "string", description: "Full descriptive name of the item" },
         year: { type: "string" },
         country: { type: "string" },
         mint_mark: { type: "string" },
-        composition: { type: "string", description: "Primary composition (e.g. 'Clad', 'Silver', 'Mixed')" },
+        composition: { type: "string", description: "Material/composition (e.g. 'Silver .999', 'Clad', 'Paper')" },
+        weight: { type: "string", description: "Weight if applicable (e.g. '1 oz', '31.1g')" },
         condition_notes: { type: "string", description: "Overall condition assessment" },
         coins_included: {
           type: "array",
           items: {
             type: "object",
             properties: {
-              denomination: { type: "string", description: "e.g. '1 Cent', '5 Cents', '10 Cents'" },
-              description: { type: "string", description: "e.g. 'Lincoln Shield Penny'" }
+              denomination: { type: "string" },
+              description: { type: "string" }
             }
           },
-          description: "All individual coins in the set"
+          description: "Individual coins/items included (for sets and rolls)"
         },
         estimated_value: { type: "string", description: "Rough estimated value like '$35'" },
         notes: { type: "string", description: "Any additional observations" }
