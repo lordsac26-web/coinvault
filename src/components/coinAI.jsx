@@ -212,3 +212,6 @@ Provide accurate details based on what you can see in the images.`,
   });
   return result;
 };
+
+// Backward compatibility alias
+export const analyzeSet = analyzeItem;
