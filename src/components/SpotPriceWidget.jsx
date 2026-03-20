@@ -16,6 +16,7 @@ export default function SpotPriceWidget({ onClose }) {
   const [prices, setPrices] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
   const [minimized, setMinimized] = useState(false);
   const [position, setPosition] = useState(() => {
     const saved = localStorage.getItem('spotWidgetPos');
@@ -27,30 +28,63 @@ export default function SpotPriceWidget({ onClose }) {
 
   const fetchPrices = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Look up the current live spot prices for these precious metals: Gold, Silver, Platinum, Palladium, and Copper. Return the price per troy ounce in USD for each (copper per pound). Include the 24h change percentage if available.`,
-      add_context_from_internet: true,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          metals: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                price: { type: "string", description: "Current spot price e.g. '$2,045.30'" },
-                unit: { type: "string", description: "e.g. 'per troy oz' or 'per lb'" },
-                change_24h: { type: "string", description: "e.g. '+1.2%' or '-0.5%'" },
+    setError(null);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Look up the current live spot prices for these precious metals: Gold, Silver, Platinum, Palladium, and Copper. Return the price per troy ounce in USD for each (copper per pound). Include the 24h change percentage if available.`,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            metals: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  price: { type: "string", description: "Current spot price e.g. '$2,045.30'" },
+                  unit: { type: "string", description: "e.g. 'per troy oz' or 'per lb'" },
+                  change_24h: { type: "string", description: "e.g. '+1.2%' or '-0.5%'" },
+                }
               }
+            },
+            as_of: { type: "string", description: "When the data was fetched, e.g. 'March 20, 2026'" }
+          }
+        },
+        model: "gemini_3_flash"
+      });
+      setPrices(result);
+    } catch (err) {
+      console.warn('Spot price fetch failed, retrying...', err.message);
+      try {
+        const retry = await base44.integrations.Core.InvokeLLM({
+          prompt: `What are today's spot prices for Gold, Silver, Platinum, Palladium (per troy oz USD) and Copper (per lb USD)? Include 24h change if known.`,
+          add_context_from_internet: true,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              metals: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    price: { type: "string" },
+                    unit: { type: "string" },
+                    change_24h: { type: "string" },
+                  }
+                }
+              },
+              as_of: { type: "string" }
             }
           },
-          as_of: { type: "string", description: "When the data was fetched, e.g. 'March 20, 2026'" }
-        }
-      },
-      model: "gemini_3_flash"
-    });
-    setPrices(result);
+          model: "gemini_3_flash"
+        });
+        setPrices(retry);
+      } catch {
+        setError('Could not fetch prices. Tap refresh to try again.');
+      }
+    }
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -124,6 +158,11 @@ export default function SpotPriceWidget({ onClose }) {
             {loading ? (
               <div className="flex items-center justify-center py-6">
                 <Loader2 className="w-5 h-5 text-[#c9a84c]/50 animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-4 space-y-2">
+                <p className="text-[11px] text-red-400/70">{error}</p>
+                <button onClick={() => fetchPrices(true)} className="text-[11px] text-[#e8c97a] underline">Retry</button>
               </div>
             ) : prices?.metals ? (
               <div className="space-y-1.5">
