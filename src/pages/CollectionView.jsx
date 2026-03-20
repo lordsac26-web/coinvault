@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getCoinsByCollection, createCoin, deleteCoin } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, ArrowLeft, Coins } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Coins, FileDown, Loader2, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,6 +22,9 @@ export default function CollectionView() {
   });
   const [obverseFile, setObverseFile] = useState(null);
   const [reverseFile, setReverseFile] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [showExport, setShowExport] = useState(false);
+  const [exportWithImages, setExportWithImages] = useState(true);
 
   const load = async () => {
     setLoading(true);
@@ -65,6 +68,23 @@ export default function CollectionView() {
     load();
   };
 
+  const handleExportPdf = async () => {
+    setExporting(true);
+    const response = await base44.functions.invoke('exportCollectionPdf', {
+      collectionId,
+      includeThumbnails: exportWithImages,
+    });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${collection?.name || 'collection'}_report.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExporting(false);
+    setShowExport(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -92,12 +112,49 @@ export default function CollectionView() {
           <h1 className="text-xl sm:text-2xl font-bold text-[#e8c97a] truncate" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{collection.name}</h1>
           <p className="text-xs sm:text-sm text-[#f5f0e8]/35">{coins.length} coin{coins.length !== 1 ? 's' : ''} · {collection.type}</p>
         </div>
-        <Dialog open={showAdd} onOpenChange={setShowAdd}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="bg-[#c9a84c] hover:bg-[#e8c97a] text-[#0a0e1a] gap-1.5 h-9 px-3 sm:px-4 rounded-xl font-semibold shrink-0">
-              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Coin</span><span className="sm:hidden">Add</span>
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2 shrink-0">
+          <Dialog open={showExport} onOpenChange={setShowExport}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="border-[#c9a84c]/20 text-[#f5f0e8]/60 hover:text-[#e8c97a] hover:bg-[#c9a84c]/10 gap-1.5 h-9 px-3 rounded-xl" disabled={coins.length === 0}>
+                <FileDown className="w-4 h-4" /> <span className="hidden sm:inline">PDF</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-[#0f1525] border-[#c9a84c]/20 text-[#f5f0e8] mx-4 sm:mx-auto rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-[#e8c97a]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Export PDF Report</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-2">
+                <p className="text-sm text-[#f5f0e8]/50">Generate a PDF report of <strong className="text-[#f5f0e8]/80">{collection?.name}</strong> with {coins.length} coin{coins.length !== 1 ? 's' : ''}.</p>
+                <button
+                  onClick={() => setExportWithImages(!exportWithImages)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${exportWithImages ? 'border-[#c9a84c]/40 bg-[#c9a84c]/8' : 'border-[#c9a84c]/10 bg-white/[0.02]'}`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${exportWithImages ? 'bg-[#c9a84c]/20' : 'bg-white/5'}`}>
+                    <ImageIcon className={`w-4 h-4 ${exportWithImages ? 'text-[#e8c97a]' : 'text-[#f5f0e8]/25'}`} />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="text-sm font-medium text-[#f5f0e8]">Include coin thumbnails</p>
+                    <p className="text-xs text-[#f5f0e8]/35">Adds obverse images next to each coin row</p>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full p-0.5 transition-colors ${exportWithImages ? 'bg-[#c9a84c]' : 'bg-white/10'}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform ${exportWithImages ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
+                </button>
+                {exportWithImages && (
+                  <p className="text-[11px] text-[#f5f0e8]/25">Note: Including images may take longer to generate and produce a larger file.</p>
+                )}
+                <Button onClick={handleExportPdf} disabled={exporting} className="w-full bg-[#c9a84c] hover:bg-[#e8c97a] text-[#0a0e1a] h-11 rounded-xl font-semibold gap-2">
+                  {exporting ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : <><FileDown className="w-4 h-4" /> Download PDF</>}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={showAdd} onOpenChange={setShowAdd}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="bg-[#c9a84c] hover:bg-[#e8c97a] text-[#0a0e1a] gap-1.5 h-9 px-3 sm:px-4 rounded-xl font-semibold">
+                <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Coin</span><span className="sm:hidden">Add</span>
+              </Button>
+            </DialogTrigger>
           <DialogContent className="bg-[#0f1525] border-[#c9a84c]/20 text-[#f5f0e8] max-h-[85vh] overflow-y-auto mx-4 sm:mx-auto rounded-2xl">
             <DialogHeader>
               <DialogTitle className="text-[#e8c97a]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Add Coin</DialogTitle>
@@ -158,6 +215,7 @@ export default function CollectionView() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {coins.length === 0 ? (
