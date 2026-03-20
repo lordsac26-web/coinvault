@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { createCoin } from '@/components/storage';
-import { analyzeItem, analyzeSet } from '@/components/coinAI';
+import { analyzeItem } from '@/components/coinAI';
 import { Package, Loader2, Sparkles, X, Camera, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
