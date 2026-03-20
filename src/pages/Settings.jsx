@@ -115,10 +115,10 @@ export default function Settings() {
       <div className="rounded-2xl p-4 sm:p-5" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
         <h3 className="font-semibold text-sm sm:text-base mb-4" style={{ color: 'var(--cv-text)' }}>Export Data</h3>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <Button onClick={handleExportJSON} variant="outline" className="gap-2 h-11 rounded-xl justify-center" style={{ border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
+          <Button onClick={handleExportJSON} className="gap-2 h-11 rounded-xl justify-center" style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: 'none' }}>
             <Download className="w-4 h-4" /> JSON Backup
           </Button>
-          <Button onClick={handleExportCSV} variant="outline" className="gap-2 h-11 rounded-xl justify-center" style={{ border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
+          <Button onClick={handleExportCSV} className="gap-2 h-11 rounded-xl justify-center" style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: 'none' }}>
             <Download className="w-4 h-4" /> CSV Export
           </Button>
         </div>
