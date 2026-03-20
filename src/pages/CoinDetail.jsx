@@ -5,6 +5,7 @@ import { gradeCoin, enrichCoin, getMarketValue } from '@/components/coinAI';
 import AIGradingCard from '@/components/AIGradingCard';
 import CoinPhotoGuide from '@/components/CoinPhotoGuide';
 import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera, Share2, Pencil, Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import { isMultiImageType, getEntryLabel } from '@/lib/entryTypes';
 import CoinShareCard from '@/components/CoinShareCard';
 import ImageCropper from '@/components/ImageCropper';
 import { base44 } from '@/api/base44Client';
@@ -51,7 +52,7 @@ export default function CoinDetail() {
 
   const handleCancelCrop = () => { setEditingPhoto(null); setCropFile(null); };
 
-  const isSet = coin?.entry_type === 'proof_set' || coin?.entry_type === 'mint_set';
+  const isSet = isMultiImageType(coin?.entry_type);
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-10 h-10 rounded-full border-4 animate-spin" style={{ borderColor: 'var(--cv-spinner-track)', borderTopColor: 'var(--cv-spinner-head)' }} /></div>;
   if (!coin) return <div className="max-w-7xl mx-auto px-4 py-8 text-center"><p style={{ color: 'var(--cv-text-secondary)' }}>Coin not found.</p><Link to="/dashboard" className="underline mt-4 inline-block" style={{ color: 'var(--cv-accent)' }}>Back</Link></div>;
@@ -66,7 +67,7 @@ export default function CoinDetail() {
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold mb-3"
           style={{ background: 'var(--cv-accent-bg)', color: 'var(--cv-accent)', border: '1px solid var(--cv-accent-border)' }}>
           <Package className="w-3.5 h-3.5" />
-          {coin.entry_type === 'proof_set' ? 'Proof Set' : 'Mint Set'}
+          {getEntryLabel(coin.entry_type)}
         </div>
       )}
 
@@ -138,7 +139,7 @@ export default function CoinDetail() {
       {isSet && coin.set_contents?.length > 0 && (
         <div className="rounded-2xl p-4 sm:p-5 mb-5" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
           <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--cv-accent)' }}>
-            Coins in Set ({coin.set_contents.length})
+            Contents ({coin.set_contents.length})
           </h3>
           <div className="space-y-1.5">
             {coin.set_contents.map((c, i) => (
