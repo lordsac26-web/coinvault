@@ -67,7 +67,8 @@ export default function Layout() {
 
       {/* Mobile top bar — logo only */}
       <div className="fixed top-0 left-0 right-0 z-50 md:hidden border-b border-[#c9a84c]/10" style={{ background: 'rgba(10,14,26,0.95)', backdropFilter: 'blur(16px)' }}>
-        <div className="flex items-center justify-center h-12">
+        <div className="flex items-center justify-between h-12 px-4">
+          <div className="w-8" />
           <Link to="/dashboard" className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] flex items-center justify-center">
               <Coins className="w-3 h-3 text-[#0a0e1a]" />
@@ -76,6 +77,9 @@ export default function Layout() {
               CoinVault
             </span>
           </Link>
+          <button onClick={toggleSpotWidget} className={`p-1.5 rounded-lg transition-colors ${showSpotWidget ? 'text-[#e8c97a] bg-[#c9a84c]/10' : 'text-[#f5f0e8]/35'}`}>
+            <CircleDollarSign className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
