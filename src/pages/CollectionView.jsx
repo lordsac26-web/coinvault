@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import ImageCropper from '@/components/ImageCropper';
+import CollectionTags from '@/components/CollectionTags';
 
 export default function CollectionView() {
   const { id: collectionId } = useParams();
@@ -231,6 +232,8 @@ export default function CollectionView() {
           </Dialog>
         </div>
       </div>
+
+      <CollectionTags collection={collection} onUpdate={setCollection} coinCount={coins.length} />
 
       {coins.length === 0 ? (
         <div className="text-center py-16 sm:py-24">

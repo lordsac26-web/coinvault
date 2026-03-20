@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getCollections, getCoins, createCollection, deleteCollection } from '@/components/storage';
-import { Plus, Trash2, FolderOpen, Coins, DollarSign, Star } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Coins, DollarSign, Star, Tag, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -68,6 +68,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newCol, setNewCol] = useState({ name: '', description: '', type: 'Custom' });
+  const [activeTag, setActiveTag] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -93,6 +94,12 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (id) => { await deleteCollection(id); load(); };
+
+  // Gather all unique tags across collections
+  const allTags = [...new Set(collections.flatMap(c => c.tags || []))].sort();
+  const filteredCollections = activeTag
+    ? collections.filter(c => (c.tags || []).includes(activeTag))
+    : collections;
 
   if (loading) {
     return (
@@ -144,7 +151,33 @@ export default function Dashboard() {
         </Dialog>
       </div>
 
-      {collections.length === 0 ? (
+      {/* Tag filters */}
+      {allTags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-5">
+          <div className="flex items-center gap-1 mr-1">
+            <Tag className="w-3.5 h-3.5" style={{ color: 'var(--cv-text-muted)' }} />
+            <span className="text-xs font-medium" style={{ color: 'var(--cv-text-muted)' }}>Filter:</span>
+          </div>
+          {allTags.map(tag => (
+            <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
+              style={activeTag === tag
+                ? { background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: '1px solid var(--cv-accent)' }
+                : { background: 'var(--cv-bg-card)', color: 'var(--cv-text-secondary)', border: '1px solid var(--cv-border)' }
+              }>
+              {tag}
+              {activeTag === tag && <X className="w-3 h-3" />}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {filteredCollections.length === 0 && collections.length > 0 ? (
+        <div className="text-center py-16">
+          <p className="text-sm" style={{ color: 'var(--cv-text-muted)' }}>No collections match "{activeTag}"</p>
+          <button onClick={() => setActiveTag(null)} className="text-xs mt-2 underline" style={{ color: 'var(--cv-accent)' }}>Clear filter</button>
+        </div>
+      ) : collections.length === 0 ? (
         <div className="text-center py-16 sm:py-24">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--cv-accent-bg)' }}>
             <FolderOpen className="w-7 h-7" style={{ color: 'var(--cv-text-faint)' }} />
@@ -154,7 +187,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {collections.map(col => (
+          {filteredCollections.map(col => (
             <CollectionCard key={col.id} col={col} coinCount={coins.filter(c => c.collection_id === col.id).length} onDelete={handleDelete} />
           ))}
         </div>
