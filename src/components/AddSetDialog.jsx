@@ -1,16 +1,30 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { createCoin } from '@/components/storage';
-import { analyzeSet } from '@/components/coinAI';
-import { Package, Upload, Loader2, Sparkles, X, Camera, Check } from 'lucide-react';
+import { analyzeItem } from '@/components/coinAI';
+import { Package, Loader2, Sparkles, X, Camera, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
+const ENTRY_TYPES = [
+  { value: 'proof_set', label: 'Proof Set', desc: 'Hard plastic case' },
+  { value: 'mint_set', label: 'Mint Set', desc: 'Soft plastic/cello' },
+  { value: 'bullion', label: 'Bullion', desc: 'Gold/silver coins & bars' },
+  { value: 'roll', label: 'Coin Roll', desc: 'Rolled coins' },
+  { value: 'commemorative', label: 'Commemorative', desc: 'Coins & medals' },
+  { value: 'paper_currency', label: 'Paper Currency', desc: 'Banknotes & bills' },
+];
+
+const TYPE_LABELS = {
+  proof_set: 'Proof Set', mint_set: 'Mint Set', bullion: 'Bullion',
+  roll: 'Coin Roll', commemorative: 'Commemorative', paper_currency: 'Paper Currency',
+};
+
 export default function AddSetDialog({ collectionId, onAdded }) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState('upload'); // upload | analyzing | review
-  const [setType, setSetType] = useState('proof_set');
+  const [step, setStep] = useState('upload');
+  const [entryType, setEntryType] = useState('proof_set');
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
@@ -38,14 +52,10 @@ export default function AddSetDialog({ collectionId, onAdded }) {
     if (files.length === 0) return;
     setAnalyzing(true);
     setStep('analyzing');
-
-    // Upload all files
     const uploadPromises = files.map(f => base44.integrations.Core.UploadFile({ file: f }));
     const uploaded = await Promise.all(uploadPromises);
     const urls = uploaded.map(u => u.file_url);
-
-    // AI analysis
-    const result = await analyzeSet(urls, setType);
+    const result = await analyzeItem(urls, entryType);
     setAiResult({ ...result, imageUrls: urls });
     setAnalyzing(false);
     setStep('review');
@@ -54,25 +64,24 @@ export default function AddSetDialog({ collectionId, onAdded }) {
   const handleSave = async () => {
     if (!aiResult) return;
     setSaving(true);
-
     await createCoin({
       collection_id: collectionId,
-      entry_type: setType,
-      set_name: aiResult.set_name || `${aiResult.year} ${setType === 'proof_set' ? 'Proof' : 'Mint'} Set`,
+      entry_type: entryType,
+      set_name: aiResult.set_name || `${aiResult.year || ''} ${TYPE_LABELS[entryType]}`.trim(),
       set_images: aiResult.imageUrls,
       set_contents: aiResult.coins_included || [],
-      country: aiResult.country || 'United States',
+      country: aiResult.country || '',
       year: aiResult.year || '',
-      denomination: setType === 'proof_set' ? 'Proof Set' : 'Mint Set',
+      denomination: TYPE_LABELS[entryType],
       mint_mark: aiResult.mint_mark || '',
       composition: aiResult.composition || '',
+      weight: aiResult.weight || '',
       condition_notes: aiResult.condition_notes || '',
       personal_notes: aiResult.notes || '',
       purchase_price: purchasePrice,
       obverse_image: aiResult.imageUrls?.[0] || null,
       market_value: aiResult.estimated_value ? { this_coin_estimated_value: aiResult.estimated_value } : null,
     });
-
     setSaving(false);
     resetAndClose();
     onAdded();
@@ -85,7 +94,7 @@ export default function AddSetDialog({ collectionId, onAdded }) {
     setPreviews([]);
     setAiResult(null);
     setPurchasePrice('');
-    setSetType('proof_set');
+    setEntryType('proof_set');
   };
 
   return (
@@ -93,43 +102,37 @@ export default function AddSetDialog({ collectionId, onAdded }) {
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5 h-9 px-3 sm:px-4 rounded-xl font-semibold"
           style={{ background: 'var(--cv-accent-bg)', color: 'var(--cv-accent)', border: '1px solid var(--cv-accent-border)' }}>
-          <Package className="w-4 h-4" /> <span className="hidden sm:inline">Add Set</span><span className="sm:hidden">Set</span>
+          <Package className="w-4 h-4" /> <span className="hidden sm:inline">Add Item</span><span className="sm:hidden">Item</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto mx-4 sm:mx-auto rounded-2xl"
         style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
         <DialogHeader>
           <DialogTitle style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>
-            Add {setType === 'proof_set' ? 'Proof' : 'Mint'} Set
+            Add {TYPE_LABELS[entryType]}
           </DialogTitle>
         </DialogHeader>
 
         {step === 'upload' && (
           <div className="space-y-4 mt-2">
-            {/* Set type toggle */}
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { value: 'proof_set', label: 'Proof Set', desc: 'Hard plastic case' },
-                { value: 'mint_set', label: 'Mint Set', desc: 'Soft plastic/cello' },
-              ].map(opt => (
-                <button key={opt.value} onClick={() => setSetType(opt.value)}
-                  className="p-3 rounded-xl text-left transition-all"
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {ENTRY_TYPES.map(opt => (
+                <button key={opt.value} onClick={() => setEntryType(opt.value)}
+                  className="p-2.5 rounded-xl text-left transition-all"
                   style={{
-                    border: setType === opt.value ? '2px solid var(--cv-accent)' : '1px solid var(--cv-border)',
-                    background: setType === opt.value ? 'var(--cv-accent-bg)' : 'var(--cv-bg-card)',
+                    border: entryType === opt.value ? '2px solid var(--cv-accent)' : '1px solid var(--cv-border)',
+                    background: entryType === opt.value ? 'var(--cv-accent-bg)' : 'var(--cv-bg-card)',
                   }}>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--cv-text)' }}>{opt.label}</p>
-                  <p className="text-[11px]" style={{ color: 'var(--cv-text-muted)' }}>{opt.desc}</p>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--cv-text)' }}>{opt.label}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--cv-text-muted)' }}>{opt.desc}</p>
                 </button>
               ))}
             </div>
 
-            {/* Photo upload area */}
             <div>
               <p className="text-xs font-medium mb-2" style={{ color: 'var(--cv-text-muted)' }}>
-                Upload photos of the complete set (front, back, packaging)
+                Upload photos (front, back, packaging)
               </p>
-
               {previews.length > 0 && (
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   {previews.map((src, i) => (
@@ -144,7 +147,6 @@ export default function AddSetDialog({ collectionId, onAdded }) {
                   ))}
                 </div>
               )}
-
               <label className="flex flex-col items-center gap-2 py-6 rounded-xl cursor-pointer transition-colors"
                 style={{ border: '2px dashed var(--cv-border)', background: 'var(--cv-input-bg)' }}>
                 <Camera className="w-6 h-6" style={{ color: 'var(--cv-text-faint)' }} />
@@ -158,7 +160,7 @@ export default function AddSetDialog({ collectionId, onAdded }) {
             <Button onClick={handleAnalyze} disabled={files.length === 0}
               className="w-full h-11 rounded-xl font-semibold gap-2"
               style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }}>
-              <Sparkles className="w-4 h-4" /> Analyze Set with AI
+              <Sparkles className="w-4 h-4" /> Analyze with AI
             </Button>
           </div>
         )}
@@ -167,21 +169,21 @@ export default function AddSetDialog({ collectionId, onAdded }) {
           <div className="flex flex-col items-center justify-center py-12 gap-4">
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--cv-accent)' }} />
             <div className="text-center">
-              <p className="text-sm font-medium" style={{ color: 'var(--cv-text)' }}>Analyzing your set...</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--cv-text-muted)' }}>Identifying coins, year, and condition</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--cv-text)' }}>Analyzing your {TYPE_LABELS[entryType].toLowerCase()}...</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--cv-text-muted)' }}>Identifying details and condition</p>
             </div>
           </div>
         )}
 
         {step === 'review' && aiResult && (
           <div className="space-y-4 mt-2">
-            {/* Set header */}
             <div className="rounded-xl p-3" style={{ background: 'var(--cv-accent-bg)', border: '1px solid var(--cv-accent-border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--cv-accent)' }}>{aiResult.set_name}</h3>
-              <div className="flex gap-3 mt-1.5 text-xs" style={{ color: 'var(--cv-text-secondary)' }}>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5 text-xs" style={{ color: 'var(--cv-text-secondary)' }}>
                 {aiResult.year && <span>{aiResult.year}</span>}
                 {aiResult.country && <span>· {aiResult.country}</span>}
                 {aiResult.mint_mark && <span>· Mint: {aiResult.mint_mark}</span>}
+                {aiResult.weight && <span>· {aiResult.weight}</span>}
               </div>
               {aiResult.composition && (
                 <span className="inline-block mt-1.5 text-[11px] px-2 py-0.5 rounded"
@@ -191,11 +193,10 @@ export default function AddSetDialog({ collectionId, onAdded }) {
               )}
             </div>
 
-            {/* Coins identified */}
             {aiResult.coins_included?.length > 0 && (
               <div>
                 <p className="text-[11px] uppercase tracking-wide font-medium mb-2" style={{ color: 'var(--cv-text-muted)' }}>
-                  Coins Identified ({aiResult.coins_included.length})
+                  Contents ({aiResult.coins_included.length})
                 </p>
                 <div className="space-y-1">
                   {aiResult.coins_included.map((coin, i) => (
@@ -214,7 +215,6 @@ export default function AddSetDialog({ collectionId, onAdded }) {
               </div>
             )}
 
-            {/* Condition + notes */}
             {aiResult.condition_notes && (
               <div className="rounded-xl p-3" style={{ background: 'var(--cv-input-bg)' }}>
                 <p className="text-[11px] uppercase tracking-wide font-medium mb-1" style={{ color: 'var(--cv-text-muted)' }}>Condition</p>
@@ -229,7 +229,6 @@ export default function AddSetDialog({ collectionId, onAdded }) {
               </div>
             )}
 
-            {/* Purchase price */}
             <Input placeholder="Purchase price (optional)" value={purchasePrice}
               onChange={e => setPurchasePrice(e.target.value)}
               className="h-11 rounded-xl"
@@ -245,7 +244,7 @@ export default function AddSetDialog({ collectionId, onAdded }) {
                 className="flex-1 h-11 rounded-xl font-semibold gap-2"
                 style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }}>
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {saving ? 'Saving...' : 'Save Set'}
+                {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>
