@@ -4,8 +4,10 @@ import { getCoinById, updateCoin } from '@/components/storage';
 import { gradeCoin, enrichCoin, getMarketValue } from '@/components/coinAI';
 import AIGradingCard from '@/components/AIGradingCard';
 import CoinPhotoGuide from '@/components/CoinPhotoGuide';
-import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera, Share2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, BookOpen, DollarSign, Loader2, Camera, Share2, Pencil } from 'lucide-react';
 import CoinShareCard from '@/components/CoinShareCard';
+import ImageCropper from '@/components/ImageCropper';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -16,6 +18,9 @@ export default function CoinDetail() {
   const [aiLoading, setAiLoading] = useState(null);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [editingPhoto, setEditingPhoto] = useState(null); // 'obverse_image' | 'reverse_image'
+  const [cropFile, setCropFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const load = async () => { setLoading(true); const c = await getCoinById(coinId); setCoin(c); setLoading(false); };
@@ -26,6 +31,24 @@ export default function CoinDetail() {
   const handleEnrich = async () => { setAiLoading('enrich'); const r = await enrichCoin(coin); await updateCoin(coin.id, { enrichment: r, enriched_at: new Date().toISOString() }); setCoin({ ...coin, enrichment: r }); setAiLoading(null); };
   const handleMarketValue = async () => { setAiLoading('market'); const r = await getMarketValue(coin); await updateCoin(coin.id, { market_value: r, market_value_at: new Date().toISOString() }); setCoin({ ...coin, market_value: r }); setAiLoading(null); };
   const handleAcceptGrade = async (grade) => { await updateCoin(coin.id, { user_grade: grade }); setCoin({ ...coin, user_grade: grade }); };
+
+  const handlePhotoSelect = (field, file) => {
+    if (!file) return;
+    setCropFile(file);
+    setEditingPhoto(field);
+  };
+
+  const handleCropped = async (croppedFile) => {
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file: croppedFile });
+    await updateCoin(coin.id, { [editingPhoto]: file_url });
+    setCoin({ ...coin, [editingPhoto]: file_url });
+    setEditingPhoto(null);
+    setCropFile(null);
+    setUploading(false);
+  };
+
+  const handleCancelCrop = () => { setEditingPhoto(null); setCropFile(null); };
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-10 h-10 rounded-full border-4 animate-spin" style={{ borderColor: 'var(--cv-spinner-track)', borderTopColor: 'var(--cv-spinner-head)' }} /></div>;
   if (!coin) return <div className="max-w-7xl mx-auto px-4 py-8 text-center"><p style={{ color: 'var(--cv-text-secondary)' }}>Coin not found.</p><Link to="/dashboard" className="underline mt-4 inline-block" style={{ color: 'var(--cv-accent)' }}>Back</Link></div>;
@@ -41,13 +64,40 @@ export default function CoinDetail() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {['obverse_image', 'reverse_image'].map(key => (
-          <div key={key} className="aspect-square rounded-2xl overflow-hidden flex items-center justify-center" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+          <div key={key} className="relative group aspect-square rounded-2xl overflow-hidden flex items-center justify-center" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
             {coin[key] ? <img src={coin[key]} alt={key.replace('_', ' ')} className="w-full h-full object-contain p-4 sm:p-6" /> : (
               <div className="text-center"><Camera className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--cv-text-faint)' }} /><span className="text-xs" style={{ color: 'var(--cv-text-faint)' }}>{key === 'obverse_image' ? 'Obverse' : 'Reverse'}</span></div>
             )}
+            <label className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all cursor-pointer">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-1.5">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--cv-accent-dim)' }}>
+                  <Pencil className="w-4 h-4" style={{ color: 'var(--cv-accent-text)' }} />
+                </div>
+                <span className="text-xs font-medium text-white">{coin[key] ? 'Change Photo' : 'Add Photo'}</span>
+              </div>
+              <input type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handlePhotoSelect(key, e.target.files[0]); e.target.value = ''; }} />
+            </label>
           </div>
         ))}
       </div>
+
+      {/* Photo cropper dialog */}
+      {editingPhoto && cropFile && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden p-4" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
+            <p className="text-sm font-semibold mb-3" style={{ color: 'var(--cv-text)' }}>
+              Crop {editingPhoto === 'obverse_image' ? 'Obverse' : 'Reverse'} Photo
+            </p>
+            {uploading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--cv-accent)' }} />
+              </div>
+            ) : (
+              <ImageCropper file={cropFile} onCropped={handleCropped} onCancel={handleCancelCrop} initialShape="circle" />
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl p-4 sm:p-5 mb-5" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
         <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--cv-accent)' }}>Coin Details</h3>
