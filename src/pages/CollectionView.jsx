@@ -124,7 +124,7 @@ export default function CollectionView() {
           {/* PDF Export */}
           <Dialog open={showExport} onOpenChange={setShowExport}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="gap-1.5 h-9 px-3 rounded-xl" style={{ border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text-secondary)' }} disabled={coins.length === 0}>
+              <Button size="sm" className="gap-1.5 h-9 px-3 rounded-xl font-semibold" style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }} disabled={coins.length === 0}>
                 <FileDown className="w-4 h-4" /> <span className="hidden sm:inline">PDF</span>
               </Button>
             </DialogTrigger>
@@ -148,7 +148,7 @@ export default function CollectionView() {
                     <div className={`w-5 h-5 rounded-full bg-white transition-transform ${exportWithImages ? 'translate-x-4' : 'translate-x-0'}`} />
                   </div>
                 </button>
-                <Button onClick={handleExportPdf} disabled={exporting} className="w-full h-11 rounded-xl font-semibold gap-2" style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }}>
+                <Button onClick={handleExportPdf} disabled={exporting} className="w-full h-11 rounded-xl font-semibold gap-2" style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: 'none' }}>
                   {exporting ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : <><FileDown className="w-4 h-4" /> Download PDF</>}
                 </Button>
               </div>
