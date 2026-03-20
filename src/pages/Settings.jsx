@@ -68,61 +68,61 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-2xl font-bold text-[#e8c97a] mb-8" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Settings</h1>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      <h1 className="text-xl sm:text-2xl font-bold text-[#e8c97a] mb-5 sm:mb-8" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Settings</h1>
 
       {/* API Key */}
-      <div className="rounded-xl border border-[#c9a84c]/15 p-5 mb-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <div className="flex items-center gap-2 mb-4">
+      <div className="rounded-2xl border border-[#c9a84c]/10 p-4 sm:p-5 mb-4 sm:mb-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div className="flex items-center gap-2 mb-3">
           <Key className="w-4 h-4 text-[#e8c97a]" />
-          <h3 className="font-semibold text-[#f5f0e8]">AI API Key</h3>
-          {hasKey && <span className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded">Active</span>}
+          <h3 className="font-semibold text-[#f5f0e8] text-sm sm:text-base">AI API Key</h3>
+          {hasKey && <span className="text-[11px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded-md font-medium">Active</span>}
         </div>
-        <p className="text-xs text-[#f5f0e8]/40 mb-3">Enter your GitHub Models API key for AI grading, enrichment, and market values.</p>
+        <p className="text-xs text-[#f5f0e8]/35 mb-3 leading-relaxed">Enter your GitHub Models API key for AI grading, enrichment, and market values.</p>
         <div className="flex gap-2">
           <Input
             type="password"
             placeholder="ghp_..."
             value={apiKey}
             onChange={e => setApiKey(e.target.value)}
-            className="bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] flex-1"
+            className="bg-white/5 border-[#c9a84c]/15 text-[#f5f0e8] flex-1 h-11 rounded-xl"
           />
-          <Button onClick={handleSaveApiKey} disabled={saving} className="bg-[#c9a84c] hover:bg-[#e8c97a] text-[#0a0e1a]">
+          <Button onClick={handleSaveApiKey} disabled={saving} className="bg-[#c9a84c] hover:bg-[#e8c97a] text-[#0a0e1a] h-11 px-5 rounded-xl font-semibold shrink-0">
             {saved ? <Check className="w-4 h-4" /> : saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
           </Button>
         </div>
       </div>
 
       {/* Preferences */}
-      <div className="rounded-xl border border-[#c9a84c]/15 p-5 mb-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <h3 className="font-semibold text-[#f5f0e8] mb-4">Preferences</h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
+      <div className="rounded-2xl border border-[#c9a84c]/10 p-4 sm:p-5 mb-4 sm:mb-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <h3 className="font-semibold text-[#f5f0e8] text-sm sm:text-base mb-4">Preferences</h3>
+        <div className="space-y-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
               <p className="text-sm text-[#f5f0e8]">Auto-enrich new coins</p>
-              <p className="text-xs text-[#f5f0e8]/40">Automatically fetch historical data for new coins</p>
+              <p className="text-xs text-[#f5f0e8]/35 mt-0.5">Automatically fetch historical data</p>
             </div>
             <Switch checked={settings?.ai_auto_enrich || false} onCheckedChange={v => save({ ai_auto_enrich: v })} />
           </div>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
               <p className="text-sm text-[#f5f0e8]">Currency</p>
-              <p className="text-xs text-[#f5f0e8]/40">Display currency for values</p>
+              <p className="text-xs text-[#f5f0e8]/35 mt-0.5">Display currency for values</p>
             </div>
             <Input value={settings?.currency || 'USD'} onChange={e => save({ currency: e.target.value })}
-              className="w-20 bg-white/5 border-[#c9a84c]/20 text-[#f5f0e8] text-center" />
+              className="w-20 bg-white/5 border-[#c9a84c]/15 text-[#f5f0e8] text-center h-10 rounded-xl shrink-0" />
           </div>
         </div>
       </div>
 
       {/* Export */}
-      <div className="rounded-xl border border-[#c9a84c]/15 p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <h3 className="font-semibold text-[#f5f0e8] mb-4">Export Data</h3>
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={handleExportJSON} variant="outline" className="border-[#c9a84c]/20 text-[#f5f0e8] hover:bg-[#c9a84c]/10 gap-2">
+      <div className="rounded-2xl border border-[#c9a84c]/10 p-4 sm:p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <h3 className="font-semibold text-[#f5f0e8] text-sm sm:text-base mb-4">Export Data</h3>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button onClick={handleExportJSON} variant="outline" className="border-[#c9a84c]/15 text-[#f5f0e8] hover:bg-[#c9a84c]/10 gap-2 h-11 rounded-xl justify-center">
             <Download className="w-4 h-4" /> JSON Backup
           </Button>
-          <Button onClick={handleExportCSV} variant="outline" className="border-[#c9a84c]/20 text-[#f5f0e8] hover:bg-[#c9a84c]/10 gap-2">
+          <Button onClick={handleExportCSV} variant="outline" className="border-[#c9a84c]/15 text-[#f5f0e8] hover:bg-[#c9a84c]/10 gap-2 h-11 rounded-xl justify-center">
             <Download className="w-4 h-4" /> CSV Export
           </Button>
         </div>
