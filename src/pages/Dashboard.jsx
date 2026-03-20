@@ -37,6 +37,19 @@ function CollectionCard({ col, coinCount, onDelete }) {
         <div className="p-3.5 sm:p-4">
           <h3 className="font-semibold text-sm sm:text-base truncate" style={{ color: 'var(--cv-text)' }}>{col.name}</h3>
           <p className="text-xs mt-1" style={{ color: 'var(--cv-text-muted)' }}>{coinCount} coin{coinCount !== 1 ? 's' : ''} · {col.type}</p>
+          {col.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {col.tags.slice(0, 3).map(tag => (
+                <span key={tag} className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                  style={{ background: 'var(--cv-accent-bg)', color: 'var(--cv-accent)', border: '1px solid var(--cv-accent-border)' }}>
+                  {tag}
+                </span>
+              ))}
+              {col.tags.length > 3 && (
+                <span className="text-[10px] py-0.5" style={{ color: 'var(--cv-text-faint)' }}>+{col.tags.length - 3}</span>
+              )}
+            </div>
+          )}
         </div>
       </Link>
       <div className="px-3.5 pb-3 flex justify-end">
