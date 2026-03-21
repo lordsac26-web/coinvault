@@ -215,5 +215,41 @@ Provide accurate details based on what you can see in the images.`,
   return result;
 };
 
+export const identifyCoin = async (obverseUrl, reverseUrl) => {
+  const result = await base44.integrations.Core.InvokeLLM({
+    prompt: `You are a world-class numismatist with encyclopedic knowledge of coins from every country and era. Analyze these two coin images (obverse and reverse) and identify exactly what coin this is.
+
+Search numismatic databases (PCGS, NGC, Numista, etc.) to cross-reference your visual identification with known coin data. Provide the most accurate identification possible.
+
+Be specific: exact denomination with full text (e.g. "25 Cents (Quarter)"), exact year, exact country, mint mark, series name, composition, weight, and diameter. If you can determine the variety or die type, include that too.
+
+Also provide an initial condition/grade assessment and estimated market value based on the apparent condition.`,
+    file_urls: [obverseUrl, reverseUrl],
+    add_context_from_internet: true,
+    response_json_schema: {
+      type: "object",
+      properties: {
+        coin_name: { type: "string", description: "Full descriptive name, e.g. '1964 Kennedy Half Dollar'" },
+        country: { type: "string" },
+        denomination: { type: "string", description: "e.g. '50 Cents (Half Dollar)'" },
+        year: { type: "string" },
+        mint_mark: { type: "string", description: "Mint mark if visible, or 'None'" },
+        coin_series: { type: "string", description: "e.g. 'Kennedy Half Dollar', 'Walking Liberty'" },
+        composition: { type: "string", description: "e.g. '90% Silver, 10% Copper'" },
+        weight: { type: "string", description: "e.g. '12.5g'" },
+        diameter: { type: "string", description: "e.g. '30.6mm'" },
+        designer: { type: "string" },
+        mintage: { type: "string", description: "Number minted for this year/mint" },
+        suggested_grade: { type: "string", description: "Approximate Sheldon grade like VF-30, MS-63" },
+        estimated_value: { type: "string", description: "Estimated market value like '$45'" },
+        confidence: { type: "number", description: "Identification confidence 0-100" },
+        identification_notes: { type: "string", description: "Notes on the identification, any caveats or variety details" }
+      }
+    },
+    model: "gemini_3_flash"
+  });
+  return result;
+};
+
 // Backward compatibility alias
 export const analyzeSet = analyzeItem;
