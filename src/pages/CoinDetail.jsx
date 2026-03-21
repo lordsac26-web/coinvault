@@ -188,7 +188,8 @@ export default function CoinDetail() {
             <img
               src={coin.set_images[activeSetImage]}
               alt={`Set photo ${activeSetImage + 1}`}
-              className="w-full h-full object-contain p-4 sm:p-6"
+              className="w-full h-full object-contain p-4 sm:p-6 cursor-zoom-in"
+              onClick={() => setViewerImage({ src: coin.set_images[activeSetImage], alt: `${coinTitle} — Photo ${activeSetImage + 1}` })}
             />
             {coin.set_images.length > 1 && (
               <>
