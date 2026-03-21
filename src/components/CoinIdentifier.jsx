@@ -77,20 +77,30 @@ export default function CoinIdentifier({ collectionId, onAdded }) {
     setStep('upload');
   };
 
+  const [error, setError] = useState(null);
+
   const handleIdentify = async () => {
     if (!obverseFile || !reverseFile) return;
     setStep('analyzing');
     setAnalyzing(true);
-    const [obv, rev] = await Promise.all([
-      base44.integrations.Core.UploadFile({ file: obverseFile }),
-      base44.integrations.Core.UploadFile({ file: reverseFile }),
-    ]);
-    setImageUrls({ obverse: obv.file_url, reverse: rev.file_url });
-    const identified = await identifyCoin(obv.file_url, rev.file_url);
-    setResult(identified);
-    setEdits({});
-    setAnalyzing(false);
-    setStep('review');
+    setError(null);
+    try {
+      const [obv, rev] = await Promise.all([
+        base44.integrations.Core.UploadFile({ file: obverseFile }),
+        base44.integrations.Core.UploadFile({ file: reverseFile }),
+      ]);
+      setImageUrls({ obverse: obv.file_url, reverse: rev.file_url });
+      const identified = await identifyCoin(obv.file_url, rev.file_url);
+      setResult(identified);
+      setEdits({});
+      setStep('review');
+    } catch (err) {
+      console.error('Coin identification failed:', err);
+      setError('Identification failed. The request may have timed out — please try again.');
+      setStep('upload');
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const getVal = (key) => edits[key] !== undefined ? edits[key] : (result?.[key] || '');
@@ -154,6 +164,11 @@ export default function CoinIdentifier({ collectionId, onAdded }) {
 
         {step === 'upload' && (
           <div className="space-y-4 mt-2">
+            {error && (
+              <div className="rounded-xl p-3 text-xs" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
+                {error}
+              </div>
+            )}
             <p className="text-xs" style={{ color: 'var(--cv-text-muted)' }}>
               Take or upload photos of both sides. AI will identify the coin and fill in all details.
             </p>
