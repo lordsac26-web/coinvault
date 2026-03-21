@@ -60,7 +60,10 @@ export default function Layout() {
       {/* Mobile top bar */}
       <div className="fixed top-0 left-0 right-0 z-50 md:hidden" style={{ background: 'var(--cv-bg-nav)', backdropFilter: 'blur(16px)', borderBottom: '1px solid var(--cv-border)' }}>
         <div className="flex items-center justify-between h-12 px-4">
-          <div className="w-8" />
+          <Link to="/settings" className="p-1.5 rounded-lg transition-colors"
+            style={isActive('/settings') ? { color: 'var(--cv-accent)', background: 'var(--cv-accent-bg)' } : { color: 'var(--cv-text-muted)' }}>
+            <User className="w-5 h-5" />
+          </Link>
           <Link to="/dashboard" className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--cv-accent-dim), var(--cv-accent))' }}>
               <Coins className="w-3 h-3" style={{ color: 'var(--cv-accent-text)' }} />
