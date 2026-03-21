@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Camera, X, Loader2, ScanLine, Flashlight } from 'lucide-react';
+import { Camera, X, Loader2, Flashlight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function BarcodeScanner({ onDetected, onClose }) {
