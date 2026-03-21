@@ -12,8 +12,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No coinId provided' }, { status: 400 });
     }
 
-    // Fetch the coin
-    const coin = await base44.asServiceRole.entities.Coin.get(coinId);
+    // Fetch the coin (use filter since RLS may restrict .get())
+    const coinList = await base44.asServiceRole.entities.Coin.filter({ id: coinId });
+    const coin = coinList[0];
     if (!coin) {
       return Response.json({ error: 'Coin not found' }, { status: 404 });
     }
