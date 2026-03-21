@@ -12,6 +12,7 @@ import { isMultiImageType, getEntryLabel } from '@/lib/entryTypes';
 import CoinShareCard from '@/components/CoinShareCard';
 import ImageCropper from '@/components/ImageCropper';
 import ImageViewer from '@/components/ImageViewer';
+import EditCoinDialog from '@/components/EditCoinDialog';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -60,6 +61,7 @@ export default function CoinDetail() {
   const [uploading, setUploading] = useState(false);
   const [activeSetImage, setActiveSetImage] = useState(0);
   const [viewerImage, setViewerImage] = useState(null); // { src, alt }
+  const [showEdit, setShowEdit] = useState(false);
 
   const { aiLoading, run } = useAIAction(coin, setCoin);
 
@@ -170,13 +172,22 @@ export default function CoinDetail() {
         </div>
       )}
 
-      <h1
-        className="text-xl sm:text-2xl font-bold mb-5"
-        style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}
-      >
-        {/* FIX: coinTitle computed above, no JSX template-literal false rendering */}
-        {coinTitle}
-      </h1>
+      <div className="flex items-start justify-between gap-3 mb-5">
+        <h1
+          className="text-xl sm:text-2xl font-bold"
+          style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          {coinTitle}
+        </h1>
+        <Button
+          onClick={() => setShowEdit(true)}
+          size="sm"
+          className="gap-1.5 shrink-0 rounded-xl text-xs font-semibold"
+          style={{ background: 'var(--cv-accent-bg)', color: 'var(--cv-accent)', border: '1px solid var(--cv-accent-border)' }}
+        >
+          <Pencil className="w-3.5 h-3.5" /> Edit
+        </Button>
+      </div>
 
       {/* Set image gallery */}
       {isSet && coin.set_images?.length > 0 ? (
@@ -522,6 +533,14 @@ export default function CoinDetail() {
 
       {showPhotoGuide && <div className="mb-5"><CoinPhotoGuide onClose={() => setShowPhotoGuide(false)} /></div>}
       {showShare && <CoinShareCard coin={coin} onClose={() => setShowShare(false)} />}
+      {showEdit && (
+        <EditCoinDialog
+          coin={coin}
+          open={showEdit}
+          onOpenChange={setShowEdit}
+          onSaved={(patch) => setCoin(prev => ({ ...prev, ...patch }))}
+        />
+      )}
 
       {/* Tabs for AI results */}
       <Tabs defaultValue="grading" className="space-y-3">
