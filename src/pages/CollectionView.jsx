@@ -359,28 +359,14 @@ export default function CollectionView() {
               ) : (
                 <div className="space-y-3 mt-2">
                   <div className="grid grid-cols-2 gap-3">
-                    {/* Country — pre-populated from existing coins */}
-                    {existingCountries.length > 0 ? (
-                      <Select
-                        value={newCoin.country || undefined}
-                        onValueChange={v => setNewCoin({ ...newCoin, country: v === '__custom_country' ? '__custom_country' : v })}
-                      >
-                        <SelectTrigger className="h-11 rounded-xl" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
-                          <SelectValue placeholder="Country" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
-                          {existingCountries.map(c => (
-                            <SelectItem key={c} value={c} style={{ color: 'var(--cv-text)' }}>{c}</SelectItem>
-                          ))}
-                          <SelectItem value="__custom_country" style={{ color: 'var(--cv-accent)' }}>Other...</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input placeholder="Country" value={newCoin.country}
-                        onChange={e => setNewCoin({ ...newCoin, country: e.target.value })}
-                        className="h-11 rounded-xl"
-                        style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
-                    )}
+                    {/* Country — with autocomplete suggestions from existing coins */}
+                    <Input placeholder="Country" value={newCoin.country} list="countries-list"
+                      onChange={e => setNewCoin({ ...newCoin, country: e.target.value })}
+                      className="h-11 rounded-xl"
+                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
+                    <datalist id="countries-list">
+                      {existingCountries.map(c => <option key={c} value={c} />)}
+                    </datalist>
                     <Select
                       value={newCoin.denomination}
                       onValueChange={v => setNewCoin({ ...newCoin, denomination: v })}
@@ -436,9 +422,6 @@ export default function CollectionView() {
                       onChange={e => setCustomDenomination(e.target.value)} className="h-11 rounded-xl"
                       style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} autoFocus />
                   )}
-                  {/* Note: When user selects "Other..." for country, typing replaces the sentinel value
-                      and the select loses its "__custom_country" state, which is fine — the text input
-                      will disappear and the typed value stays in newCoin.country */}
  
                   <div className="grid grid-cols-2 gap-3">
                     <Input
@@ -465,54 +448,24 @@ export default function CollectionView() {
                     />
                   </div>
  
-                  {/* Composition — pre-populated */}
-                  {existingCompositions.length > 0 ? (
-                    <Select value={newCoin.composition || undefined}
-                      onValueChange={v => setNewCoin({ ...newCoin, composition: v === '__custom_comp' ? '' : v })}>
-                      <SelectTrigger className="h-11 rounded-xl" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
-                        <SelectValue placeholder="Composition" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
-                        {existingCompositions.map(c => (
-                          <SelectItem key={c} value={c} style={{ color: 'var(--cv-text)' }}>{c}</SelectItem>
-                        ))}
-                        <SelectItem value="__custom_comp" style={{ color: 'var(--cv-accent)' }}>Other...</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input placeholder="Composition" value={newCoin.composition}
-                      onChange={e => setNewCoin({ ...newCoin, composition: e.target.value })}
-                      className="h-11 rounded-xl"
-                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
-                  )}
-                  {newCoin.composition === '' && existingCompositions.length > 0 && (
-                    <Input placeholder="Enter composition" value={newCoin.composition}
-                      onChange={e => setNewCoin({ ...newCoin, composition: e.target.value })}
-                      className="h-11 rounded-xl"
-                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
-                  )}
+                  {/* Composition — with autocomplete suggestions */}
+                  <Input placeholder="Composition" value={newCoin.composition} list="compositions-list"
+                    onChange={e => setNewCoin({ ...newCoin, composition: e.target.value })}
+                    className="h-11 rounded-xl"
+                    style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
+                  <datalist id="compositions-list">
+                    {existingCompositions.map(c => <option key={c} value={c} />)}
+                  </datalist>
  
                   <div className="grid grid-cols-2 gap-3">
-                    {/* Grade — pre-populated */}
-                    {existingGrades.length > 0 ? (
-                      <Select value={newCoin.user_grade || undefined}
-                        onValueChange={v => setNewCoin({ ...newCoin, user_grade: v === '__custom_grade' ? '' : v })}>
-                        <SelectTrigger className="h-11 rounded-xl" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
-                          <SelectValue placeholder="Grade" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
-                          {existingGrades.map(g => (
-                            <SelectItem key={g} value={g} style={{ color: 'var(--cv-text)' }}>{g}</SelectItem>
-                          ))}
-                          <SelectItem value="__custom_grade" style={{ color: 'var(--cv-accent)' }}>Other...</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input placeholder="Grade" value={newCoin.user_grade}
-                        onChange={e => setNewCoin({ ...newCoin, user_grade: e.target.value })}
-                        className="h-11 rounded-xl"
-                        style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
-                    )}
+                    {/* Grade — with autocomplete suggestions */}
+                    <Input placeholder="Grade" value={newCoin.user_grade} list="grades-list"
+                      onChange={e => setNewCoin({ ...newCoin, user_grade: e.target.value })}
+                      className="h-11 rounded-xl"
+                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
+                    <datalist id="grades-list">
+                      {existingGrades.map(g => <option key={g} value={g} />)}
+                    </datalist>
                     <Input
                       placeholder="Purchase Price"
                       value={newCoin.purchase_price}
