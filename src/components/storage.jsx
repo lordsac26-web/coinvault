@@ -108,17 +108,39 @@ export const deleteCoin = async (id) => {
   await base44.entities.Coin.delete(id);
 };
 
+// ── Value parsing helper ──
+
+// Parse a value string like "$22", "$15-$25", "~$1,200", "$1.2k" into a number
+export const parseEstimatedValue = (str) => {
+  if (!str) return 0;
+  const s = String(str).trim();
+  // If it's a range like "$15-$25" or "$100 - $150", average the two ends
+  const rangeMatch = s.match(/\$?\s*([\d,.]+)\s*[-–to]+\s*\$?\s*([\d,.]+)/i);
+  if (rangeMatch) {
+    const low = parseFloat(rangeMatch[1].replace(/,/g, ''));
+    const high = parseFloat(rangeMatch[2].replace(/,/g, ''));
+    if (!isNaN(low) && !isNaN(high)) return (low + high) / 2;
+  }
+  // Handle "k" suffix like "$1.2k" → 1200
+  const kMatch = s.match(/([\d,.]+)\s*k/i);
+  if (kMatch) {
+    const val = parseFloat(kMatch[1].replace(/,/g, ''));
+    return isNaN(val) ? 0 : val * 1000;
+  }
+  // Standard: strip everything except digits and decimal, take first number
+  const cleaned = s.replace(/[^0-9.]/g, '');
+  const val = parseFloat(cleaned);
+  return isNaN(val) ? 0 : val;
+};
+
 // ── Stats ──
 
 export const getPortfolioStats = async () => {
   const coins = await getCoins();
   const collections = await getCollections();
   const totalValue = coins.reduce((sum, c) => {
-    const val = parseFloat(
-      c.market_value?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') ||
-      c.purchase_price || 0
-    );
-    return sum + (isNaN(val) ? 0 : val);
+    const raw = c.market_value?.this_coin_estimated_value || c.purchase_price || '';
+    return sum + parseEstimatedValue(raw);
   }, 0);
   const newest = coins.length > 0 ? coins[0] : null;
   return {
