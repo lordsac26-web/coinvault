@@ -1,30 +1,29 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-// Generate a small JPEG thumbnail from an image URL using canvas
-// Target: ~150px for PDF embedding — keeps file size tiny
-const THUMB_SIZE = 150;
+// Generate a small JPEG thumbnail by re-encoding the image at lower quality/size
+// Uses sharp which is supported in Deno Deploy
+const THUMB_MAX = 150;
 
 async function createThumbnail(imageUrl) {
-  // Fetch original image as bytes
-  const res = await fetch(imageUrl);
-  if (!res.ok) return null;
-  const originalBytes = await res.arrayBuffer();
+  try {
+    const res = await fetch(imageUrl);
+    if (!res.ok) return null;
+    const buffer = await res.arrayBuffer();
+    const inputBytes = new Uint8Array(buffer);
 
-  // Use the Imagescript library for server-side image processing
-  const { Image } = await import('npm:imagescript@1.3.0');
+    // Use sharp for image processing (Deno Deploy compatible)
+    const sharp = (await import('npm:sharp@0.33.2')).default;
 
-  const img = await Image.decode(new Uint8Array(originalBytes));
+    const thumbBuffer = await sharp(inputBytes)
+      .resize(THUMB_MAX, THUMB_MAX, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 65 })
+      .toBuffer();
 
-  // Resize to thumbnail maintaining aspect ratio (fit within THUMB_SIZE square)
-  const scale = Math.min(THUMB_SIZE / img.width, THUMB_SIZE / img.height);
-  const newW = Math.round(img.width * scale);
-  const newH = Math.round(img.height * scale);
-  img.resize(newW, newH);
-
-  // Encode as JPEG at 70% quality for small file size
-  const thumbBytes = await img.encodeJPEG(70);
-
-  return thumbBytes;
+    return new Uint8Array(thumbBuffer);
+  } catch (err) {
+    console.error('Thumbnail creation failed:', err.message);
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -36,7 +35,6 @@ Deno.serve(async (req) => {
     }
 
     const { coinId, obverseUrl, reverseUrl } = await req.json();
-
     const updates = {};
 
     if (obverseUrl) {
@@ -57,13 +55,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update the coin record with thumbnail URLs
     if (coinId && Object.keys(updates).length > 0) {
       await base44.entities.Coin.update(coinId, updates);
     }
 
     return Response.json({ success: true, ...updates });
   } catch (error) {
+    console.error('generateThumbnail error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
