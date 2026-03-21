@@ -1,17 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 import { jsPDF } from 'npm:jspdf@4.0.0';
 
-// Fetch image as base64 for embedding in PDF
+// Fetch image as compact base64 — prefer thumbnail URLs for small file size
 async function fetchImageBase64(url) {
+  if (!url) return null;
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
     const buffer = await res.arrayBuffer();
     const bytes = new Uint8Array(buffer);
     let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
     const base64 = btoa(binary);
     const contentType = res.headers.get('content-type') || 'image/jpeg';
     const format = contentType.includes('png') ? 'PNG' : 'JPEG';
@@ -25,179 +24,213 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { collectionId, includeThumbnails } = await req.json();
-    if (!collectionId) {
-      return Response.json({ error: 'collectionId is required' }, { status: 400 });
-    }
+    if (!collectionId) return Response.json({ error: 'collectionId is required' }, { status: 400 });
 
-    // Fetch collection and coins
     const collections = await base44.entities.Collection.filter({ id: collectionId });
     const collection = collections[0];
-    if (!collection) {
-      return Response.json({ error: 'Collection not found' }, { status: 404 });
-    }
+    if (!collection) return Response.json({ error: 'Collection not found' }, { status: 404 });
 
     const coins = await base44.entities.Coin.filter({ collection_id: collectionId });
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
-    const usableWidth = pageWidth - margin * 2;
-    let y = margin;
+    const doc = new jsPDF({ unit: 'mm', format: 'letter' });
+    const pw = doc.internal.pageSize.getWidth();   // 215.9
+    const ph = doc.internal.pageSize.getHeight();   // 279.4
+    const m = 14; // margin
+    const uw = pw - m * 2; // usable width
+    let y = m;
 
-    // Helper to check page break
-    const checkPage = (needed) => {
-      if (y + needed > pageHeight - 20) {
-        doc.addPage();
-        y = margin;
-      }
+    const newPageIfNeeded = (need) => {
+      if (y + need > ph - 12) { doc.addPage(); y = m; return true; }
+      return false;
     };
 
-    // Title page
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text(collection.name, pageWidth / 2, 40, { align: 'center' });
+    // ── Colours ──
+    const darkGray = [40, 40, 40];
+    const midGray = [100, 100, 100];
+    const lightGray = [160, 160, 160];
+    const headerBg = [35, 35, 45];
+    const headerText = [255, 255, 255];
+    const accentGold = [180, 148, 46];
+    const rowAlt = [248, 248, 248];
 
-    doc.setFontSize(12);
+    // ── Cover page ──
+    // Gold accent line
+    doc.setDrawColor(...accentGold);
+    doc.setLineWidth(0.8);
+    doc.line(m, 30, pw - m, 30);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...darkGray);
+    doc.text(collection.name, pw / 2, 42, { align: 'center' });
+
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100);
-    doc.text(`Collection Report`, pageWidth / 2, 50, { align: 'center' });
-    doc.text(`${coins.length} coin${coins.length !== 1 ? 's' : ''} · ${collection.type || 'Custom'}`, pageWidth / 2, 58, { align: 'center' });
-    doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageWidth / 2, 66, { align: 'center' });
+    doc.setFontSize(11);
+    doc.setTextColor(...midGray);
+    doc.text('Collection Report', pw / 2, 50, { align: 'center' });
+
+    doc.setFontSize(9);
+    doc.setTextColor(...lightGray);
+    doc.text(
+      `${coins.length} item${coins.length !== 1 ? 's' : ''}  ·  ${collection.type || 'Custom'}  ·  ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+      pw / 2, 57, { align: 'center' }
+    );
 
     if (collection.description) {
-      doc.setFontSize(10);
-      doc.setTextColor(120);
-      const descLines = doc.splitTextToSize(collection.description, usableWidth - 40);
-      doc.text(descLines, pageWidth / 2, 78, { align: 'center' });
+      doc.setFontSize(8);
+      doc.setTextColor(...lightGray);
+      const dl = doc.splitTextToSize(collection.description, uw - 30);
+      doc.text(dl, pw / 2, 65, { align: 'center' });
     }
 
-    // Summary stats
-    const totalValue = coins.reduce((sum, c) => {
-      const val = parseFloat(
-        c.market_value?.this_coin_estimated_value?.replace(/[^0-9.]/g, '') ||
-        c.purchase_price || 0
-      );
-      return sum + (isNaN(val) ? 0 : val);
+    // Summary box
+    const totalValue = coins.reduce((s, c) => {
+      const v = parseFloat((c.market_value?.this_coin_estimated_value || c.purchase_price || '0').replace(/[^0-9.]/g, ''));
+      return s + (isNaN(v) ? 0 : v);
     }, 0);
+    const gradedCount = coins.filter(c => c.user_grade || c.ai_grade).length;
 
-    y = 100;
-    doc.setDrawColor(200);
-    doc.line(margin + 20, y, pageWidth - margin - 20, y);
-    y += 10;
-
-    doc.setFontSize(10);
-    doc.setTextColor(80);
+    y = 78;
+    doc.setFillColor(245, 245, 242);
+    doc.roundedRect(m + 20, y, uw - 40, 14, 2, 2, 'F');
     doc.setFont('helvetica', 'bold');
-    const stats = [
-      `Total Coins: ${coins.length}`,
-      `Estimated Value: $${totalValue.toLocaleString()}`,
-      `Graded: ${coins.filter(c => c.user_grade || c.ai_grade).length}`,
-    ];
-    doc.text(stats.join('    ·    '), pageWidth / 2, y, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(...darkGray);
+    doc.text(
+      `Total: ${coins.length}     ·     Graded: ${gradedCount}     ·     Est. Value: $${totalValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+      pw / 2, y + 9, { align: 'center' }
+    );
 
-    // Coin listing
+    doc.setDrawColor(...accentGold);
+    doc.line(m, y + 22, pw - m, y + 22);
+
+    // ── Table pages ──
     doc.addPage();
-    y = margin;
+    y = m;
 
-    // Table header
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(80);
-    doc.setFillColor(245, 245, 245);
-
-    const thumbColW = includeThumbnails ? 22 : 0;
-    const cols = [
-      { label: '', x: margin, w: thumbColW },
-      { label: 'Coin', x: margin + thumbColW, w: includeThumbnails ? 42 : 55 },
-      { label: 'Country', x: margin + thumbColW + (includeThumbnails ? 42 : 55), w: 28 },
-      { label: 'Grade', x: margin + thumbColW + (includeThumbnails ? 70 : 83), w: 22 },
-      { label: 'Composition', x: margin + thumbColW + (includeThumbnails ? 92 : 105), w: 30 },
-      { label: 'Purchase', x: margin + thumbColW + (includeThumbnails ? 122 : 135), w: 22 },
-      { label: 'Value', x: margin + thumbColW + (includeThumbnails ? 144 : 157), w: 22 },
+    // Column layout — compact
+    const thumbW = includeThumbnails ? 14 : 0;
+    const thumbGap = includeThumbnails ? 2 : 0;
+    const colDefs = [
+      { label: 'Coin',        w: 46 },
+      { label: 'Country',     w: 24 },
+      { label: 'Grade',       w: 20 },
+      { label: 'Composition', w: 28 },
+      { label: 'Purchased',   w: 18 },
+      { label: 'Est. Value',  w: 20 },
     ];
+    // Calculate starting x for each column
+    let cx = m + thumbW + thumbGap;
+    const colPositions = colDefs.map(c => { const pos = cx; cx += c.w; return { ...c, x: pos }; });
 
-    const headerHeight = 8;
-    doc.rect(margin, y, usableWidth, headerHeight, 'F');
-    cols.forEach(col => {
-      if (col.label) doc.text(col.label, col.x + 1, y + 5.5);
-    });
-    y += headerHeight + 2;
+    const drawHeader = () => {
+      doc.setFillColor(...headerBg);
+      doc.rect(m, y, uw, 7, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(...headerText);
+      if (includeThumbnails) doc.text('Img', m + 1, y + 5);
+      colPositions.forEach(c => doc.text(c.label, c.x + 1, y + 5));
+      y += 9;
+      doc.setTextColor(...darkGray);
+    };
 
-    // Rows
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(40);
-    const rowHeight = includeThumbnails ? 20 : 10;
+    drawHeader();
+
+    const rowH = includeThumbnails ? 16 : 8;
+
+    // Pre-fetch all thumbnail images in parallel for speed
+    let thumbCache = {};
+    if (includeThumbnails) {
+      const thumbPromises = coins.map(async (coin, idx) => {
+        // Prefer thumbnail, fall back to full image
+        const url = coin.obverse_thumb || coin.obverse_image || coin.set_images?.[0];
+        if (!url) return;
+        const data = await fetchImageBase64(url);
+        if (data) thumbCache[idx] = data;
+      });
+      await Promise.all(thumbPromises);
+    }
 
     for (let i = 0; i < coins.length; i++) {
       const coin = coins[i];
-      checkPage(rowHeight + 4);
 
-      // Alternate row bg
-      if (i % 2 === 0) {
-        doc.setFillColor(250, 250, 250);
-        doc.rect(margin, y - 1, usableWidth, rowHeight + 2, 'F');
+      // Check page break — redraw header on new page
+      if (y + rowH + 2 > ph - 12) {
+        doc.addPage();
+        y = m;
+        drawHeader();
       }
 
-      const textY = includeThumbnails ? y + 10 : y + 4;
+      // Alternate row
+      if (i % 2 === 0) {
+        doc.setFillColor(...rowAlt);
+        doc.rect(m, y - 0.5, uw, rowH + 1, 'F');
+      }
 
       // Thumbnail
-      if (includeThumbnails && coin.obverse_image) {
-        const imgData = await fetchImageBase64(coin.obverse_image);
-        if (imgData) {
-          try {
-            doc.addImage(imgData.base64, imgData.format, margin + 1, y, 18, 18);
-          } catch {
-            // skip if image fails
-          }
-        }
+      if (includeThumbnails && thumbCache[i]) {
+        try {
+          doc.addImage(thumbCache[i].base64, thumbCache[i].format, m + 1, y + 0.5, 12, 12);
+        } catch { /* skip */ }
       }
 
-      doc.setFontSize(8);
-      const coinName = `${coin.year || ''} ${coin.denomination || ''}`.trim() || 'Unnamed';
-      doc.text(coinName.substring(0, 25), cols[1].x + 1, textY);
+      const textY = includeThumbnails ? y + 6 : y + 5;
 
-      doc.text((coin.country || '-').substring(0, 16), cols[2].x + 1, textY);
-      doc.text((coin.user_grade || coin.ai_grade?.suggested_grade || '-').substring(0, 12), cols[3].x + 1, textY);
-      doc.text((coin.composition || '-').substring(0, 16), cols[4].x + 1, textY);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(...darkGray);
 
-      const purchasePrice = coin.purchase_price ? `$${coin.purchase_price}` : '-';
-      doc.text(purchasePrice.substring(0, 10), cols[5].x + 1, textY);
+      const coinName = (coin.set_name || `${coin.year || ''} ${coin.denomination || ''}`.trim()) || 'Unnamed';
+      doc.text(coinName.substring(0, 28), colPositions[0].x + 1, textY);
 
-      const estValue = coin.market_value?.this_coin_estimated_value || '-';
-      doc.text(estValue.substring(0, 10), cols[6].x + 1, textY);
+      doc.text((coin.country || '-').substring(0, 14), colPositions[1].x + 1, textY);
+      doc.text((coin.user_grade || coin.ai_grade?.suggested_grade || '-').substring(0, 12), colPositions[2].x + 1, textY);
+      doc.text((coin.composition || '-').substring(0, 18), colPositions[3].x + 1, textY);
 
-      // Mint mark and series on second line if thumbnails
+      const pp = coin.purchase_price ? `$${coin.purchase_price}` : '-';
+      doc.text(pp.substring(0, 10), colPositions[4].x + 1, textY);
+
+      const ev = coin.market_value?.this_coin_estimated_value || '-';
+      doc.text(ev.substring(0, 10), colPositions[5].x + 1, textY);
+
+      // Sub-line: mint mark, series, storage
       if (includeThumbnails) {
-        doc.setFontSize(6);
-        doc.setTextColor(130);
-        const details = [
+        doc.setFontSize(5.5);
+        doc.setTextColor(...lightGray);
+        const sub = [
           coin.mint_mark && coin.mint_mark !== 'None' ? `Mint: ${coin.mint_mark}` : '',
           coin.coin_series || '',
-          coin.storage_location ? `Storage: ${coin.storage_location}` : '',
-        ].filter(Boolean).join(' · ');
-        if (details) doc.text(details.substring(0, 60), cols[1].x + 1, textY + 5);
-        doc.setTextColor(40);
+          coin.storage_location ? `📦 ${coin.storage_location}` : '',
+        ].filter(Boolean).join('  ·  ');
+        if (sub) doc.text(sub.substring(0, 70), colPositions[0].x + 1, textY + 5);
+        doc.setTextColor(...darkGray);
       }
 
-      y += rowHeight + 2;
-
-      // Separator line
-      doc.setDrawColor(230);
-      doc.line(margin, y - 1, pageWidth - margin, y - 1);
+      // Row separator
+      doc.setDrawColor(230, 230, 230);
+      doc.setLineWidth(0.2);
+      y += rowH + 1;
+      doc.line(m, y, pw - m, y);
+      y += 1;
     }
 
-    // Footer on last page
-    checkPage(15);
-    y += 8;
-    doc.setFontSize(7);
-    doc.setTextColor(160);
-    doc.text(`CoinVault Collection Report · ${collection.name} · Generated ${new Date().toISOString().split('T')[0]}`, pageWidth / 2, y, { align: 'center' });
+    // ── Footer ──
+    y += 6;
+    newPageIfNeeded(10);
+    doc.setDrawColor(...accentGold);
+    doc.setLineWidth(0.5);
+    doc.line(m + 30, y, pw - m - 30, y);
+    y += 5;
+    doc.setFontSize(6);
+    doc.setTextColor(...lightGray);
+    doc.text(
+      `CoinVault  ·  ${collection.name}  ·  ${new Date().toISOString().split('T')[0]}`,
+      pw / 2, y, { align: 'center' }
+    );
 
     const pdfBytes = doc.output('arraybuffer');
 
@@ -205,7 +238,7 @@ Deno.serve(async (req) => {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${collection.name.replace(/[^a-zA-Z0-9]/g, '_')}_report.pdf"`,
+        'Content-Disposition': `attachment; filename="${collection.name.replace(/[^a-zA-Z0-9 ]/g, '_')}_report.pdf"`,
       },
     });
   } catch (error) {
