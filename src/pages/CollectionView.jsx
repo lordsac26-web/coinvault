@@ -115,10 +115,6 @@ export default function CollectionView() {
     // Before: handleAddCoin ran unconditionally, creating blank coin records.
     const resolvedDenomination =
       newCoin.denomination === '__custom' ? customDenomination.trim() : newCoin.denomination;
-    // Resolve any "__custom_*" sentinel values to empty string
-    const resolvedCountry = newCoin.country === '__custom_country' ? '' : newCoin.country;
-    const resolvedComposition = newCoin.composition === '__custom_comp' ? '' : newCoin.composition;
-    const resolvedGrade = newCoin.user_grade === '__custom_grade' ? '' : newCoin.user_grade;
 
     if (!resolvedDenomination || !newCoin.year.trim()) return;
  
@@ -133,9 +129,6 @@ export default function CollectionView() {
         collection_id: collectionId,
         ...newCoin,
         denomination: resolvedDenomination,
-        country: resolvedCountry,
-        composition: resolvedComposition,
-        user_grade: resolvedGrade,
         obverse_image: obverseUrl,
         reverse_image: reverseUrl,
       });
