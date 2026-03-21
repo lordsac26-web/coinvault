@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import EditCollectionName from '@/components/EditCollectionName';
 
 // FIX: Extracted shared PageLoader component — was duplicated across 5 pages
 export function PageLoader() {
@@ -54,7 +55,7 @@ function StatCard({ label, value, icon: Icon, color }) {
   );
 }
 
-function CollectionCard({ col, coinCount, onDelete }) {
+function CollectionCard({ col, coinCount, onDelete, onUpdated }) {
   return (
     <div
       className="group rounded-2xl overflow-hidden transition-all active:scale-[0.98]"
@@ -102,7 +103,8 @@ function CollectionCard({ col, coinCount, onDelete }) {
           )}
         </div>
       </Link>
-      <div className="px-3.5 pb-3 flex justify-end">
+      <div className="px-3.5 pb-3 flex justify-end gap-2">
+        <EditCollectionName collection={col} onUpdated={onUpdated} />
         <AlertDialog>
           <AlertDialogTrigger asChild>
             {/*
@@ -410,6 +412,7 @@ export default function Dashboard() {
               col={col}
               coinCount={coins.filter(c => c.collection_id === col.id).length}
               onDelete={handleDelete}
+              onUpdated={load}
             />
           ))}
         </div>

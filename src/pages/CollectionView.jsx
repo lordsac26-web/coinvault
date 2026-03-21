@@ -12,6 +12,7 @@ import ImageCropper from '@/components/ImageCropper';
 import CollectionTags from '@/components/CollectionTags';
 import AddSetDialog from '@/components/AddSetDialog';
 import CoinIdentifier from '@/components/CoinIdentifier';
+import EditCollectionName from '@/components/EditCollectionName';
 import { isMultiImageType, getEntryLabel } from '@/lib/entryTypes';
 import { PageLoader } from './Dashboard'; // FIX: shared loader
  
@@ -210,12 +211,15 @@ export default function CollectionView() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1
-            className="text-xl sm:text-2xl font-bold truncate"
-            style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            {collection.name}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1
+              className="text-xl sm:text-2xl font-bold truncate"
+              style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              {collection.name}
+            </h1>
+            <EditCollectionName collection={collection} onUpdated={load} />
+          </div>
           <p className="text-xs sm:text-sm" style={{ color: 'var(--cv-text-muted)' }}>
             {coins.length} coin{coins.length !== 1 ? 's' : ''} · {collection.type}
           </p>
