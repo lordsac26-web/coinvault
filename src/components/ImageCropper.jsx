@@ -284,11 +284,11 @@ export default function ImageCropper({ file, onCropped, onCancel, initialShape =
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex gap-1">
-          <button onClick={() => setShape('circle')}
+          <button onClick={() => { setShape('circle'); setActivePreset(null); setShowPresets(false); }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${shape === 'circle' ? 'bg-[var(--cv-accent)]/15 text-[var(--cv-accent)]' : 'text-[var(--cv-text)]/40 hover:text-[var(--cv-text)]/60'}`}>
             <Circle className="w-3.5 h-3.5" /> Coin
           </button>
-          <button onClick={() => setShape('rectangle')}
+          <button onClick={() => { setShape('rectangle'); setActivePreset(null); setShowPresets(false); }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${shape === 'rectangle' ? 'bg-[var(--cv-accent)]/15 text-[var(--cv-accent)]' : 'text-[var(--cv-text)]/40 hover:text-[var(--cv-text)]/60'}`}>
             <Square className="w-3.5 h-3.5" /> Bill
           </button>
