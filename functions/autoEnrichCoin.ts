@@ -12,8 +12,7 @@ Deno.serve(async (req) => {
     }
 
     // Fetch the coin
-    const coins = await base44.asServiceRole.entities.Coin.filter({ id: coinId });
-    const coin = coins[0];
+    const coin = await base44.asServiceRole.entities.Coin.get(coinId);
     if (!coin) {
       return Response.json({ error: 'Coin not found' }, { status: 404 });
     }
