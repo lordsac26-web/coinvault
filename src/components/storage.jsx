@@ -122,7 +122,6 @@ export const getSettings = async () => {
     default_country: '',
     ai_auto_enrich: true,
     price_auto_refresh: false,
-    github_api_key: '',
   });
 };
 
