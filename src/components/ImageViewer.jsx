@@ -5,9 +5,17 @@ export default function ImageViewer({ src, alt, onClose }) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const [showHint, setShowHint] = useState(true);
   const dragStart = useRef({ x: 0, y: 0 });
+  const didDrag = useRef(false);
   const lastDist = useRef(null);
   const containerRef = useRef(null);
+
+  // Fade out the hint after 2.5s
+  useEffect(() => {
+    const t = setTimeout(() => setShowHint(false), 2500);
+    return () => clearTimeout(t);
+  }, []);
 
   const clampScale = (s) => Math.max(0.5, Math.min(s, 8));
 
@@ -57,18 +65,26 @@ export default function ImageViewer({ src, alt, onClose }) {
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
     setDragging(true);
+    didDrag.current = false;
     dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
   };
 
   const handleMouseMove = (e) => {
     if (!dragging) return;
+    didDrag.current = true;
     setPosition({
       x: e.clientX - dragStart.current.x,
       y: e.clientY - dragStart.current.y,
     });
   };
 
-  const handleMouseUp = () => setDragging(false);
+  const handleMouseUp = (e) => {
+    // Close if user clicked (not dragged) on the background — not on controls or the image
+    if (!didDrag.current && e.target === containerRef.current) {
+      onClose();
+    }
+    setDragging(false);
+  };
 
   const reset = () => { setScale(1); setPosition({ x: 0, y: 0 }); };
 
@@ -122,12 +138,19 @@ export default function ImageViewer({ src, alt, onClose }) {
         </div>
       </div>
 
-      {/* Zoom level indicator */}
-      {scale !== 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-full bg-black/60 text-white/80 text-xs font-medium">
-          {Math.round(scale * 100)}%
-        </div>
-      )}
+      {/* Hint + Zoom level indicator */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+        {showHint && (
+          <div className="px-4 py-2 rounded-full bg-black/70 text-white/80 text-xs font-medium animate-pulse">
+            Tap background or press Esc to close
+          </div>
+        )}
+        {scale !== 1 && (
+          <div className="px-3 py-1.5 rounded-full bg-black/60 text-white/80 text-xs font-medium">
+            {Math.round(scale * 100)}%
+          </div>
+        )}
+      </div>
 
       {/* Image */}
       <img
