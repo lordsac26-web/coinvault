@@ -1,8 +1,28 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Circle, Square, RotateCcw, RotateCw, Check, X, Crosshair } from 'lucide-react';
+import { Circle, Square, RotateCcw, RotateCw, Check, X, ChevronDown } from 'lucide-react';
 
 const BILL_ASPECT = 2.35; // width / height ratio for banknotes
+
+// Common coin diameters in mm — used as relative sizing ratios
+const COIN_PRESETS = [
+  { label: 'Cent / Penny', mm: 19.05 },
+  { label: 'Nickel', mm: 21.21 },
+  { label: 'Dime', mm: 17.91 },
+  { label: 'Quarter', mm: 24.26 },
+  { label: 'Half Dollar', mm: 30.61 },
+  { label: 'Dollar (Small)', mm: 26.50 },
+  { label: 'Dollar (Large)', mm: 38.10 },
+  { label: 'Silver Eagle', mm: 40.60 },
+  { label: 'Gold Eagle', mm: 32.70 },
+  { label: 'Slab / Holder', mm: 0, aspect: 1.55 }, // TPG slab ratio
+];
+
+const BILL_PRESETS = [
+  { label: 'US Note', aspect: 2.35 },
+  { label: 'Euro Note', aspect: 2.13 },
+  { label: 'Wider Note', aspect: 2.50 },
+];
 
 export default function ImageCropper({ file, onCropped, onCancel, initialShape = 'circle' }) {
   const canvasRef = useRef(null);
@@ -14,6 +34,8 @@ export default function ImageCropper({ file, onCropped, onCancel, initialShape =
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
+  const [activePreset, setActivePreset] = useState(null);
   const containerRef = useRef(null);
   const lastPinchDist = useRef(null);
 
@@ -140,17 +162,36 @@ export default function ImageCropper({ file, onCropped, onCancel, initialShape =
     });
   }, [getRotatedDims]);
 
-  const snapToEdge = useCallback(() => {
+  const applyPreset = useCallback((preset) => {
     const { rw, rh } = getRotatedDims();
     if (!rw) return;
+    setActivePreset(preset.label);
+    setShowPresets(false);
+
     if (shape === 'rectangle') {
-      let w = rw;
-      let h = w / BILL_ASPECT;
-      if (h > rh) { h = rh; w = h * BILL_ASPECT; }
+      // Bill presets use aspect ratios
+      const aspect = preset.aspect || BILL_ASPECT;
+      let w = rw * 0.92;
+      let h = w / aspect;
+      if (h > rh * 0.92) { h = rh * 0.92; w = h * aspect; }
+      setCrop({ w, h, x: (rw - w) / 2, y: (rh - h) / 2 });
+    } else if (preset.aspect) {
+      // Slab / holder — rectangular but in coin mode
+      let w = Math.min(rw, rh) * 0.85;
+      let h = w * preset.aspect;
+      if (h > rh * 0.92) { h = rh * 0.92; w = h / preset.aspect; }
       setCrop({ w, h, x: (rw - w) / 2, y: (rh - h) / 2 });
     } else {
-      const size = Math.min(rw, rh);
-      setCrop({ w: size, h: size, x: (rw - size) / 2, y: (rh - size) / 2 });
+      // Coin presets: scale diameter relative to largest preset as reference
+      // Use 85% of smaller image dimension for the largest coin (Silver Eagle 40.6mm)
+      const maxMm = 40.60;
+      const maxPx = Math.min(rw, rh) * 0.85;
+      const size = Math.max(50, Math.min(maxPx, (preset.mm / maxMm) * maxPx));
+      setCrop({
+        w: size, h: size,
+        x: Math.max(0, (rw - size) / 2),
+        y: Math.max(0, (rh - size) / 2),
+      });
     }
   }, [shape, getRotatedDims]);
 
@@ -252,7 +293,7 @@ export default function ImageCropper({ file, onCropped, onCancel, initialShape =
             <Square className="w-3.5 h-3.5" /> Bill
           </button>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 items-center">
           <button onClick={() => handleRotate(-90)} title="Rotate left"
             className="p-1.5 text-[var(--cv-text)]/40 hover:text-[var(--cv-accent)] transition-colors">
             <RotateCcw className="w-3.5 h-3.5" />
@@ -261,14 +302,37 @@ export default function ImageCropper({ file, onCropped, onCancel, initialShape =
             className="p-1.5 text-[var(--cv-text)]/40 hover:text-[var(--cv-accent)] transition-colors">
             <RotateCw className="w-3.5 h-3.5" />
           </button>
-          <button onClick={snapToEdge} title="Snap to edges"
-            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-[var(--cv-text)]/40 hover:text-[var(--cv-accent)] transition-colors">
-            <Crosshair className="w-3.5 h-3.5" /> Snap
-          </button>
+          <div className="relative">
+            <button onClick={() => setShowPresets(!showPresets)}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              style={{ color: activePreset ? 'var(--cv-accent)' : undefined }}
+            >
+              <span className="text-[var(--cv-text)]/40 hover:text-[var(--cv-accent)]">
+                {activePreset || 'Size'}
+              </span>
+              <ChevronDown className="w-3 h-3 text-[var(--cv-text)]/40" />
+            </button>
+            {showPresets && (
+              <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-xl overflow-hidden shadow-xl"
+                style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
+                <div className="max-h-52 overflow-y-auto py-1">
+                  {(shape === 'rectangle' ? BILL_PRESETS : COIN_PRESETS).map(preset => (
+                    <button key={preset.label} onClick={() => applyPreset(preset)}
+                      className="w-full text-left px-3 py-2 text-xs transition-colors flex items-center justify-between"
+                      style={{ color: activePreset === preset.label ? 'var(--cv-accent)' : 'var(--cv-text-secondary)' }}
+                    >
+                      <span>{preset.label}</span>
+                      {preset.mm > 0 && <span style={{ color: 'var(--cv-text-faint)' }}>{preset.mm}mm</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <p className="text-[10px] text-[var(--cv-text)]/30">Drag to position · Scroll or pinch to resize · Rotate with arrows</p>
+      <p className="text-[10px] text-[var(--cv-text)]/30">Drag to position · Scroll or pinch to resize · Pick a size preset</p>
 
       <div ref={containerRef} className="flex justify-center rounded-xl overflow-hidden bg-black/20">
         <canvas ref={canvasRef}
