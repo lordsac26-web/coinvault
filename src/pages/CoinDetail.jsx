@@ -11,10 +11,11 @@ import {
 import { isMultiImageType, getEntryLabel } from '@/lib/entryTypes';
 import CoinShareCard from '@/components/CoinShareCard';
 import ImageCropper from '@/components/ImageCropper';
+import ImageViewer from '@/components/ImageViewer';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PageLoader } from './Dashboard'; // FIX: Shared loader — import from wherever you place it
+import { PageLoader } from './Dashboard';
 
 // ---------------------------------------------------------------------------
 // FIX: useAIAction hook — centralises loading state, error handling, and coin
@@ -58,6 +59,7 @@ export default function CoinDetail() {
   const [cropFile, setCropFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [activeSetImage, setActiveSetImage] = useState(0);
+  const [viewerImage, setViewerImage] = useState(null); // { src, alt }
 
   const { aiLoading, run } = useAIAction(coin, setCoin);
 
@@ -247,66 +249,59 @@ export default function CoinDetail() {
         </div>
       ) : !isSet ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          {['obverse_image', 'reverse_image'].map(key => (
-            <div
-              key={key}
-              className="relative group aspect-square rounded-2xl overflow-hidden flex items-center justify-center"
-              style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}
-            >
-              {coin[key] ? (
-                <img
-                  src={coin[key]}
-                  alt={key.replace('_', ' ')}
-                  className="w-full h-full object-contain p-4 sm:p-6"
-                />
-              ) : (
-                <div className="text-center">
-                  <Camera className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--cv-text-faint)' }} />
-                  <span className="text-xs" style={{ color: 'var(--cv-text-faint)' }}>
-                    {key === 'obverse_image' ? 'Obverse' : 'Reverse'}
-                  </span>
-                </div>
-              )}
-              {/*
-                FIX: Photo edit affordance on mobile.
-                Before: hover overlay was desktop-only (group-hover), invisible on touch devices.
-                After: always show a small camera badge in the corner so mobile users know
-                the image is tappable, while the full overlay still appears on desktop hover.
-              */}
-              <label className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all cursor-pointer">
-                {/* Always-visible camera badge for mobile */}
-                <div
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center sm:hidden"
-                  style={{ background: 'var(--cv-accent-dim)' }}
-                >
-                  <Camera className="w-3.5 h-3.5" style={{ color: 'var(--cv-accent-text)' }} />
-                </div>
-                {/* Desktop hover overlay */}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-1.5">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
+          {['obverse_image', 'reverse_image'].map(key => {
+            const label = key === 'obverse_image' ? 'Obverse' : 'Reverse';
+            return (
+              <div
+                key={key}
+                className="relative group aspect-square rounded-2xl overflow-hidden flex items-center justify-center"
+                style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}
+              >
+                {coin[key] ? (
+                  <img
+                    src={coin[key]}
+                    alt={label}
+                    className="w-full h-full object-contain p-4 sm:p-6 cursor-zoom-in"
+                    onClick={() => setViewerImage({ src: coin[key], alt: `${coinTitle} — ${label}` })}
+                  />
+                ) : (
+                  <div className="text-center">
+                    <Camera className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--cv-text-faint)' }} />
+                    <span className="text-xs" style={{ color: 'var(--cv-text-faint)' }}>{label}</span>
+                  </div>
+                )}
+                {/* Edit photo overlay */}
+                <div className="absolute bottom-2 right-2 z-10">
+                  <label
+                    className="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all opacity-60 hover:opacity-100"
                     style={{ background: 'var(--cv-accent-dim)' }}
                   >
-                    <Pencil className="w-4 h-4" style={{ color: 'var(--cv-accent-text)' }} />
-                  </div>
-                  <span className="text-xs font-medium text-white">
-                    {coin[key] ? 'Change Photo' : 'Add Photo'}
-                  </span>
+                    <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--cv-accent-text)' }} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => {
+                        if (e.target.files[0]) handlePhotoSelect(key, e.target.files[0]);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={e => {
-                    if (e.target.files[0]) handlePhotoSelect(key, e.target.files[0]);
-                    e.target.value = '';
-                  }}
-                />
-              </label>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       ) : null}
+
+      {/* Full-screen image viewer */}
+      {viewerImage && (
+        <ImageViewer
+          src={viewerImage.src}
+          alt={viewerImage.alt}
+          onClose={() => setViewerImage(null)}
+        />
+      )}
 
       {/* Set contents list */}
       {isSet && coin.set_contents?.length > 0 && (
@@ -508,20 +503,115 @@ export default function CoinDetail() {
         </Button>
       </div>
 
-      {/* AI grading result */}
-      {coin.ai_grade && (
-        <AIGradingCard grade={coin.ai_grade} onAccept={handleAcceptGrade} />
-      )}
+      {/* Action row: Share + Photo Tips */}
+      <div className="flex gap-2 mb-5">
+        <Button onClick={() => setShowShare(true)}
+          className="gap-2 h-10 rounded-xl text-sm font-medium"
+          style={{ background: 'var(--cv-accent-bg)', color: 'var(--cv-accent)', border: '1px solid var(--cv-accent-border)' }}>
+          <Share2 className="w-4 h-4" /> Share
+        </Button>
+        {!isSet && (
+          <Button variant="ghost" onClick={() => setShowPhotoGuide(!showPhotoGuide)}
+            className="gap-2 h-10 rounded-xl text-sm" style={{ color: 'var(--cv-text-muted)' }}>
+            <Camera className="w-4 h-4" /> Tips
+          </Button>
+        )}
+      </div>
 
-      {/* Share modal */}
-      {showShare && (
-        <CoinShareCard coin={coin} onClose={() => setShowShare(false)} />
-      )}
+      {showPhotoGuide && <div className="mb-5"><CoinPhotoGuide onClose={() => setShowPhotoGuide(false)} /></div>}
+      {showShare && <CoinShareCard coin={coin} onClose={() => setShowShare(false)} />}
 
-      {/* Photo guide */}
-      {showPhotoGuide && (
-        <CoinPhotoGuide onClose={() => setShowPhotoGuide(false)} />
-      )}
+      {/* Tabs for AI results */}
+      <Tabs defaultValue="grading" className="space-y-3">
+        <TabsList className="rounded-xl h-10 p-1 w-full sm:w-auto" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-border)' }}>
+          <TabsTrigger value="grading" className="rounded-lg text-xs sm:text-sm flex-1 sm:flex-none data-[state=active]:bg-[var(--cv-accent-bg)] data-[state=active]:text-[var(--cv-accent)]">Grading</TabsTrigger>
+          <TabsTrigger value="enrichment" className="rounded-lg text-xs sm:text-sm flex-1 sm:flex-none data-[state=active]:bg-[var(--cv-accent-bg)] data-[state=active]:text-[var(--cv-accent)]">Enrichment</TabsTrigger>
+          <TabsTrigger value="market" className="rounded-lg text-xs sm:text-sm flex-1 sm:flex-none data-[state=active]:bg-[var(--cv-accent-bg)] data-[state=active]:text-[var(--cv-accent)]">Market</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="grading">
+          {coin.ai_grade ? (
+            <AIGradingCard grading={coin.ai_grade} onAccept={handleAcceptGrade} userGrade={coin.user_grade} />
+          ) : (
+            <p className="text-sm py-10 text-center" style={{ color: 'var(--cv-text-faint)' }}>No AI grading yet. Tap "AI Grade" above.</p>
+          )}
+        </TabsContent>
+
+        <TabsContent value="enrichment">
+          {coin.enrichment ? (
+            <div className="rounded-2xl p-4 sm:p-5 space-y-4" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+              <h3 className="text-lg font-bold" style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>{coin.enrichment.coin_full_name}</h3>
+              {coin.enrichment.series_history && <p className="text-sm leading-relaxed" style={{ color: 'var(--cv-text-secondary)' }}>{coin.enrichment.series_history}</p>}
+              {coin.enrichment.historical_context && (
+                <div>
+                  <h4 className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cv-accent)' }}>Historical Context</h4>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--cv-text-secondary)' }}>{coin.enrichment.historical_context}</p>
+                </div>
+              )}
+              {coin.enrichment.fun_facts?.length > 0 && (
+                <div>
+                  <h4 className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--cv-accent)' }}>Fun Facts</h4>
+                  <ul className="space-y-1.5">{coin.enrichment.fun_facts.map((f, i) => <li key={i} className="text-sm" style={{ color: 'var(--cv-text-secondary)' }}>• {f}</li>)}</ul>
+                </div>
+              )}
+              {coin.enrichment.collector_notes && (
+                <div>
+                  <h4 className="text-[11px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--cv-accent)' }}>Collector Notes</h4>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--cv-text-secondary)' }}>{coin.enrichment.collector_notes}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm py-10 text-center" style={{ color: 'var(--cv-text-faint)' }}>No enrichment data yet. Tap "Enrich" above.</p>
+          )}
+        </TabsContent>
+
+        <TabsContent value="market">
+          {coin.market_value ? (
+            <div className="rounded-2xl p-4 sm:p-5 space-y-4" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+              <div className="flex items-center gap-4">
+                <div>
+                  <span className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--cv-text-muted)' }}>Estimated Value</span>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-400">{coin.market_value.this_coin_estimated_value}</p>
+                </div>
+                {coin.market_value.price_trend && (
+                  <span className={`text-xs px-2.5 py-1 rounded-lg ${coin.market_value.price_trend === 'Rising' ? 'bg-green-500/10 text-green-400' : coin.market_value.price_trend === 'Falling' ? 'bg-red-500/10 text-red-400' : ''}`}
+                    style={coin.market_value.price_trend === 'Stable' ? { background: 'var(--cv-accent-bg)', color: 'var(--cv-text-secondary)' } : undefined}>
+                    {coin.market_value.price_trend}
+                  </span>
+                )}
+              </div>
+              {coin.market_value.retail_values?.by_grade && (
+                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr style={{ color: 'var(--cv-text-muted)', borderBottom: '1px solid var(--cv-border)' }}>
+                        <th className="text-left py-2.5 font-medium">Grade</th>
+                        <th className="text-right py-2.5 font-medium">Low</th>
+                        <th className="text-right py-2.5 font-medium">High</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coin.market_value.retail_values.by_grade.map((g, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--cv-border)' }}>
+                          <td className="py-2" style={{ color: 'var(--cv-text-secondary)' }}>{g.grade}</td>
+                          <td className="py-2 text-right" style={{ color: 'var(--cv-text-secondary)' }}>{g.retail_low}</td>
+                          <td className="py-2 text-right" style={{ color: 'var(--cv-text-secondary)' }}>{g.retail_high}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {coin.market_value.market_notes && (
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--cv-text-muted)' }}>{coin.market_value.market_notes}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm py-10 text-center" style={{ color: 'var(--cv-text-faint)' }}>No market data yet. Tap "Market" above.</p>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
