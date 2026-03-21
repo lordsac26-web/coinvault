@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, CircleDollarSign, ScanBarcode, Album } from 'lucide-react';
+import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, CircleDollarSign, ScanBarcode, Grid3X3 } from 'lucide-react';
 import SpotPriceWidget from '@/components/SpotPriceWidget';
 import ScanLookup from '@/components/ScanLookup';
 
 const navItems = [
   { label: 'Collections', path: '/dashboard', icon: LayoutGrid },
-  { label: 'Album', path: '/album', icon: Album },
+  { label: 'Album', path: '/album', icon: Grid3X3 },
   { label: 'Catalog', path: '/catalog', icon: BookOpen },
   { label: 'Prices', path: '/price-guide', icon: TrendingUp },
   { label: 'Analytics', path: '/analytics', icon: BarChart3 },
