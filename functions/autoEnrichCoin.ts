@@ -43,13 +43,13 @@ Deno.serve(async (req) => {
       }
     };
 
-    // Helper to chain next step
+    // Helper to chain next step (fire-and-forget)
     const chainNext = (nextStep) => {
-      try {
-        base44.asServiceRole.functions.invoke('autoEnrichCoin', { coinId, step: nextStep });
-      } catch (e) {
-        base44.functions.invoke('autoEnrichCoin', { coinId, step: nextStep });
-      }
+      base44.functions.invoke('autoEnrichCoin', { coinId, step: nextStep })
+        .catch(() => {
+          base44.asServiceRole.functions.invoke('autoEnrichCoin', { coinId, step: nextStep })
+            .catch(e => console.error('Chain failed:', e.message));
+        });
     };
 
     // Helper to call LLM
