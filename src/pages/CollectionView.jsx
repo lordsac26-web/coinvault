@@ -436,11 +436,9 @@ export default function CollectionView() {
                       onChange={e => setCustomDenomination(e.target.value)} className="h-11 rounded-xl"
                       style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} autoFocus />
                   )}
-                  {newCoin.country === '__custom_country' && (
-                    <Input placeholder="Enter country" value="" onChange={e => setNewCoin({ ...newCoin, country: e.target.value })}
-                      className="h-11 rounded-xl"
-                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} autoFocus />
-                  )}
+                  {/* Note: When user selects "Other..." for country, typing replaces the sentinel value
+                      and the select loses its "__custom_country" state, which is fine — the text input
+                      will disappear and the typed value stays in newCoin.country */}
  
                   <div className="grid grid-cols-2 gap-3">
                     <Input
