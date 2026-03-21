@@ -13,21 +13,15 @@ Deno.serve(async (req) => {
     }
 
     // Fetch the coin
-    console.log(`Fetching coin ${coinId}, step=${step}`);
-    let coin;
-    try {
-      coin = await base44.asServiceRole.entities.Coin.get(coinId);
-    } catch (e) {
-      console.log(`get() failed: ${e.message}, trying list...`);
-      // Fallback: list all and find
-      const allCoins = await base44.asServiceRole.entities.Coin.list();
-      console.log(`Listed ${allCoins.length} coins`);
-      coin = allCoins.find(c => c.id === coinId);
-    }
+    console.log('Fetching coin ' + coinId + ' step=' + step);
+    const allCoins = await base44.asServiceRole.entities.Coin.list();
+    console.log('Total coins found: ' + allCoins.length);
+    const coin = allCoins.find(c => c.id === coinId);
     if (!coin) {
+      console.log('Coin IDs available: ' + allCoins.map(c => c.id).join(', '));
       return Response.json({ error: 'Coin not found' }, { status: 404 });
     }
-    console.log(`Found coin: ${coin.year} ${coin.denomination}`);
+    console.log('Found coin: ' + coin.year + ' ' + coin.denomination);
 
     // ── Step 1: AI Grade ──
     if (step === 'grade') {
