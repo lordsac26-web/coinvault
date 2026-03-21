@@ -5,7 +5,12 @@ import { base44 } from '@/api/base44Client';
 import { updateCollection } from '@/components/storage';
 import { toast } from 'sonner';
 
-export default function CollectionTags({ collection, onUpdate, coinCount }) {
+export default function CollectionTags({ collection, onUpdate, onUpdated, coinCount }) {
+  // Support both onUpdate (direct state setter) and onUpdated (reload callback)
+  const handleUpdate = (newCollection) => {
+    if (onUpdate) onUpdate(newCollection);
+    if (onUpdated) onUpdated();
+  };
   const [suggesting, setSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
   const tags = collection.tags || [];
@@ -25,14 +30,14 @@ export default function CollectionTags({ collection, onUpdate, coinCount }) {
     if (tags.includes(label)) return;
     const newTags = [...tags, label];
     await updateCollection(collection.id, { tags: newTags });
-    onUpdate({ ...collection, tags: newTags });
+    handleUpdate({ ...collection, tags: newTags });
     setSuggestions(prev => prev?.filter(s => s.label !== label) || null);
   };
 
   const handleRemoveTag = async (label) => {
     const newTags = tags.filter(t => t !== label);
     await updateCollection(collection.id, { tags: newTags });
-    onUpdate({ ...collection, tags: newTags });
+    handleUpdate({ ...collection, tags: newTags });
   };
 
   const handleAcceptAll = async () => {
@@ -40,7 +45,7 @@ export default function CollectionTags({ collection, onUpdate, coinCount }) {
     const newLabels = suggestions.map(s => s.label).filter(l => !tags.includes(l));
     const newTags = [...tags, ...newLabels];
     await updateCollection(collection.id, { tags: newTags });
-    onUpdate({ ...collection, tags: newTags });
+    handleUpdate({ ...collection, tags: newTags });
     setSuggestions(null);
   };
 
