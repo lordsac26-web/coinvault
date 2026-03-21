@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getCoinsByCollection, createCoin, deleteCoin } from '@/components/storage';
+import { getCoinsByCollection, createCoin, deleteCoin, getCoins } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
 import { Plus, Trash2, ArrowLeft, Coins, FileDown, Loader2, ImageIcon, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,17 +55,34 @@ export default function CollectionView() {
   const [exporting, setExporting] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [exportWithImages, setExportWithImages] = useState(true);
- 
-  // FIX: Hoisted load function — consistent with CollectionView's own pattern
-  // where load() is called both on mount and after mutations.
+  const [allCoins, setAllCoins] = useState([]); // all user coins for pre-populating dropdowns
+
   const load = async () => {
     setLoading(true);
-    const collections = await base44.entities.Collection.filter({ id: collectionId });
+    const [collections, coinList, all] = await Promise.all([
+      base44.entities.Collection.filter({ id: collectionId }),
+      getCoinsByCollection(collectionId),
+      getCoins(),
+    ]);
     setCollection(collections[0] || null);
-    const coinList = await getCoinsByCollection(collectionId);
     setCoins(coinList);
+    setAllCoins(all);
     setLoading(false);
   };
+
+  // Pre-populated dropdown options derived from all existing coins
+  const existingCountries = useMemo(
+    () => [...new Set(allCoins.map(c => c.country).filter(Boolean))].sort(),
+    [allCoins]
+  );
+  const existingCompositions = useMemo(
+    () => [...new Set(allCoins.map(c => c.composition).filter(Boolean))].sort(),
+    [allCoins]
+  );
+  const existingGrades = useMemo(
+    () => [...new Set(allCoins.map(c => c.user_grade).filter(Boolean))].sort(),
+    [allCoins]
+  );
  
   useEffect(() => { if (collectionId) load(); }, [collectionId]);
  
@@ -678,4 +695,3 @@ export default function CollectionView() {
     </div>
   );
 }
- 
