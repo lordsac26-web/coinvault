@@ -178,13 +178,32 @@ export default function Dashboard() {
 
   useEffect(() => { load(); }, []);
 
-  // FIX: Robust value parsing — handles edge cases like "~$1.2k" or malformed strings
-  const totalValue = coins.reduce((sum, c) => {
-    const raw = c.market_value?.this_coin_estimated_value || c.purchase_price || '0';
-    // Strip currency symbols and commas, but guard against multiple decimal points
-    const cleaned = String(raw).replace(/[^0-9.]/g, '');
+  // Parse a value string like "$22", "$15-$25", "~$1,200", "$1.2k" into a number
+  const parseValue = (str) => {
+    if (!str) return 0;
+    const s = String(str).trim();
+    // If it's a range like "$15-$25" or "$100 - $150", average the two ends
+    const rangeMatch = s.match(/\$?\s*([\d,.]+)\s*[-–to]+\s*\$?\s*([\d,.]+)/i);
+    if (rangeMatch) {
+      const low = parseFloat(rangeMatch[1].replace(/,/g, ''));
+      const high = parseFloat(rangeMatch[2].replace(/,/g, ''));
+      if (!isNaN(low) && !isNaN(high)) return (low + high) / 2;
+    }
+    // Handle "k" suffix like "$1.2k" → 1200
+    const kMatch = s.match(/([\d,.]+)\s*k/i);
+    if (kMatch) {
+      const val = parseFloat(kMatch[1].replace(/,/g, ''));
+      return isNaN(val) ? 0 : val * 1000;
+    }
+    // Standard: strip everything except digits and decimal point, take first number
+    const cleaned = s.replace(/[^0-9.]/g, '');
     const val = parseFloat(cleaned);
-    return sum + (isNaN(val) ? 0 : val);
+    return isNaN(val) ? 0 : val;
+  };
+
+  const totalValue = coins.reduce((sum, c) => {
+    const raw = c.market_value?.this_coin_estimated_value || c.purchase_price || '';
+    return sum + parseValue(raw);
   }, 0);
 
   const handleCreate = async () => {
