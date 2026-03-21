@@ -425,18 +425,14 @@ export default function CollectionView() {
                     disappear. Now denomination stays "__custom" while typing, resolved on submit.
                   */}
                   {newCoin.denomination === '__custom' && (
-                    <Input
-                      placeholder="Enter denomination"
-                      value={customDenomination}
-                      onChange={e => setCustomDenomination(e.target.value)}
+                    <Input placeholder="Enter denomination" value={customDenomination}
+                      onChange={e => setCustomDenomination(e.target.value)} className="h-11 rounded-xl"
+                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} autoFocus />
+                  )}
+                  {newCoin.country === '__custom_country' && (
+                    <Input placeholder="Enter country" value="" onChange={e => setNewCoin({ ...newCoin, country: e.target.value })}
                       className="h-11 rounded-xl"
-                      style={{
-                        background: 'var(--cv-input-bg)',
-                        border: '1px solid var(--cv-accent-border)',
-                        color: 'var(--cv-text)',
-                      }}
-                      autoFocus
-                    />
+                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} autoFocus />
                   )}
  
                   <div className="grid grid-cols-2 gap-3">
@@ -464,30 +460,54 @@ export default function CollectionView() {
                     />
                   </div>
  
-                  <Input
-                    placeholder="Composition"
-                    value={newCoin.composition}
-                    onChange={e => setNewCoin({ ...newCoin, composition: e.target.value })}
-                    className="h-11 rounded-xl"
-                    style={{
-                      background: 'var(--cv-input-bg)',
-                      border: '1px solid var(--cv-accent-border)',
-                      color: 'var(--cv-text)',
-                    }}
-                  />
+                  {/* Composition — pre-populated */}
+                  {existingCompositions.length > 0 ? (
+                    <Select value={newCoin.composition || undefined}
+                      onValueChange={v => setNewCoin({ ...newCoin, composition: v === '__custom_comp' ? '' : v })}>
+                      <SelectTrigger className="h-11 rounded-xl" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
+                        <SelectValue placeholder="Composition" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
+                        {existingCompositions.map(c => (
+                          <SelectItem key={c} value={c} style={{ color: 'var(--cv-text)' }}>{c}</SelectItem>
+                        ))}
+                        <SelectItem value="__custom_comp" style={{ color: 'var(--cv-accent)' }}>Other...</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input placeholder="Composition" value={newCoin.composition}
+                      onChange={e => setNewCoin({ ...newCoin, composition: e.target.value })}
+                      className="h-11 rounded-xl"
+                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
+                  )}
+                  {newCoin.composition === '' && existingCompositions.length > 0 && (
+                    <Input placeholder="Enter composition" value={newCoin.composition}
+                      onChange={e => setNewCoin({ ...newCoin, composition: e.target.value })}
+                      className="h-11 rounded-xl"
+                      style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
+                  )}
  
                   <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      placeholder="Grade"
-                      value={newCoin.user_grade}
-                      onChange={e => setNewCoin({ ...newCoin, user_grade: e.target.value })}
-                      className="h-11 rounded-xl"
-                      style={{
-                        background: 'var(--cv-input-bg)',
-                        border: '1px solid var(--cv-accent-border)',
-                        color: 'var(--cv-text)',
-                      }}
-                    />
+                    {/* Grade — pre-populated */}
+                    {existingGrades.length > 0 ? (
+                      <Select value={newCoin.user_grade || undefined}
+                        onValueChange={v => setNewCoin({ ...newCoin, user_grade: v === '__custom_grade' ? '' : v })}>
+                        <SelectTrigger className="h-11 rounded-xl" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
+                          <SelectValue placeholder="Grade" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
+                          {existingGrades.map(g => (
+                            <SelectItem key={g} value={g} style={{ color: 'var(--cv-text)' }}>{g}</SelectItem>
+                          ))}
+                          <SelectItem value="__custom_grade" style={{ color: 'var(--cv-accent)' }}>Other...</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input placeholder="Grade" value={newCoin.user_grade}
+                        onChange={e => setNewCoin({ ...newCoin, user_grade: e.target.value })}
+                        className="h-11 rounded-xl"
+                        style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
+                    )}
                     <Input
                       placeholder="Purchase Price"
                       value={newCoin.purchase_price}
