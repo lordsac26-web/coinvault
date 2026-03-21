@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ImageCropper from '@/components/ImageCropper';
 import CollectionTags from '@/components/CollectionTags';
 import AddSetDialog from '@/components/AddSetDialog';
+import CoinIdentifier from '@/components/CoinIdentifier';
 import { isMultiImageType, getEntryLabel } from '@/lib/entryTypes';
 import { PageLoader } from './Dashboard'; // FIX: shared loader
  
@@ -305,6 +306,8 @@ export default function CollectionView() {
             </DialogContent>
           </Dialog>
  
+          <CoinIdentifier collectionId={collectionId} onAdded={load} />
+
           <AddSetDialog collectionId={collectionId} onAdded={load} />
  
           {/* Add Coin */}
