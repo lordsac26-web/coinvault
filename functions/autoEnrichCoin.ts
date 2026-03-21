@@ -2,26 +2,34 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
+    console.log('autoEnrichCoin starting...');
     const base44 = createClientFromRequest(req);
-    const body = await req.json();
+    
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      body = {};
+    }
+    console.log('Body keys: ' + Object.keys(body).join(', '));
 
     // Support both direct calls and entity automation triggers
     const coinId = body.coinId || body.event?.entity_id;
-    const step = body.step || 'grade'; // grade → enrich → market
+    const step = body.step || 'grade';
+    console.log('coinId=' + coinId + ' step=' + step);
+    
     if (!coinId) {
       return Response.json({ error: 'No coinId provided' }, { status: 400 });
     }
 
     // Fetch the coin
-    console.log('Fetching coin ' + coinId + ' step=' + step);
     const allCoins = await base44.asServiceRole.entities.Coin.list();
-    console.log('Total coins found: ' + allCoins.length);
+    console.log('Listed ' + allCoins.length + ' coins');
     const coin = allCoins.find(c => c.id === coinId);
     if (!coin) {
-      console.log('Coin IDs available: ' + allCoins.map(c => c.id).join(', '));
-      return Response.json({ error: 'Coin not found' }, { status: 404 });
+      return Response.json({ error: 'Coin not found', availableIds: allCoins.map(c => c.id) }, { status: 404 });
     }
-    console.log('Found coin: ' + coin.year + ' ' + coin.denomination);
+    console.log('Found: ' + coin.year + ' ' + coin.denomination);
 
     // ── Step 1: AI Grade ──
     if (step === 'grade') {
