@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { getSettings, saveSettings, exportAllData, exportToCSV } from '@/components/storage';
-import { Download, Sparkles, Palette } from 'lucide-react';
+import { Download, Sparkles, Palette, LogIn, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/lib/ThemeContext';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function Settings() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const { themeKey, setTheme, themes } = useTheme();
+  const { user, isAuthenticated, logout, navigateToLogin } = useAuth();
 
   useEffect(() => {
     const load = async () => {
@@ -55,6 +57,40 @@ export default function Settings() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
       <h1 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-8" style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>Settings</h1>
+
+      {/* Account */}
+      <div className="rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
+        <div className="flex items-center gap-2 mb-4">
+          <User className="w-4 h-4" style={{ color: 'var(--cv-accent)' }} />
+          <h3 className="font-semibold text-sm sm:text-base" style={{ color: 'var(--cv-text)' }}>Account</h3>
+        </div>
+        {isAuthenticated && user ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ background: 'var(--cv-accent-bg)', color: 'var(--cv-accent)', border: '1px solid var(--cv-accent-border)' }}>
+                {(user.full_name || user.email || '?')[0].toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                {user.full_name && <p className="text-sm font-medium truncate" style={{ color: 'var(--cv-text)' }}>{user.full_name}</p>}
+                <p className="text-xs truncate" style={{ color: 'var(--cv-text-muted)' }}>{user.email}</p>
+              </div>
+            </div>
+            <Button onClick={() => logout()} className="gap-2 h-10 rounded-xl w-full sm:w-auto"
+              style={{ background: 'var(--cv-input-bg)', color: 'var(--cv-text-secondary)', border: '1px solid var(--cv-border)' }}>
+              <LogOut className="w-4 h-4" /> Sign Out
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-xs" style={{ color: 'var(--cv-text-muted)' }}>Sign in to sync your collection across devices.</p>
+            <Button onClick={() => navigateToLogin()} className="gap-2 h-10 rounded-xl"
+              style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: 'none' }}>
+              <LogIn className="w-4 h-4" /> Sign In
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* Theme Picker */}
       <div className="rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
