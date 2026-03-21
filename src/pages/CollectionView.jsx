@@ -352,17 +352,47 @@ export default function CollectionView() {
               ) : (
                 <div className="space-y-3 mt-2">
                   <div className="grid grid-cols-2 gap-3">
-                    <Input
-                      placeholder="Country"
-                      value={newCoin.country}
-                      onChange={e => setNewCoin({ ...newCoin, country: e.target.value })}
-                      className="h-11 rounded-xl"
-                      style={{
-                        background: 'var(--cv-input-bg)',
-                        border: '1px solid var(--cv-accent-border)',
-                        color: 'var(--cv-text)',
-                      }}
-                    />
+                    {/* Country — pre-populated from existing coins */}
+                    <Select
+                      value={newCoin.country || undefined}
+                      onValueChange={v => setNewCoin({ ...newCoin, country: v === '__custom_country' ? '' : v })}
+                    >
+                      <SelectTrigger
+                        className="h-11 rounded-xl"
+                        style={{
+                          background: 'var(--cv-input-bg)',
+                          border: '1px solid var(--cv-accent-border)',
+                          color: 'var(--cv-text)',
+                        }}
+                      >
+                        <SelectValue placeholder="Country" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60" style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
+                        {existingCountries.map(c => (
+                          <SelectItem key={c} value={c} style={{ color: 'var(--cv-text)' }}>{c}</SelectItem>
+                        ))}
+                        {existingCountries.length > 0 && (
+                          <SelectItem value="__custom_country" style={{ color: 'var(--cv-accent)' }}>Other...</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {(newCoin.country === '' && existingCountries.length > 0) ? null : newCoin.country === '' ? (
+                      <div /> /* placeholder */
+                    ) : null}
+                    {/* Show text input if "Other..." selected or no existing countries */}
+                    {(newCoin.country === '' || existingCountries.length === 0) && (
+                      <Input
+                        placeholder="Enter country"
+                        value={newCoin.country}
+                        onChange={e => setNewCoin({ ...newCoin, country: e.target.value })}
+                        className="h-11 rounded-xl col-span-2 -mt-3"
+                        style={{
+                          background: 'var(--cv-input-bg)',
+                          border: '1px solid var(--cv-accent-border)',
+                          color: 'var(--cv-text)',
+                        }}
+                      />
+                    )}
                     <Select
                       value={newCoin.denomination}
                       onValueChange={v => setNewCoin({ ...newCoin, denomination: v })}
