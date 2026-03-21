@@ -1,6 +1,16 @@
 // CoinVault data layer — Base44 entities
 import { base44 } from '@/api/base44Client';
 
+// ── Thumbnails (fire-and-forget) ──
+
+const generateThumbnails = (coinId, obverseUrl, reverseUrl) => {
+  base44.functions.invoke('generateThumbnail', {
+    coinId,
+    obverseUrl: obverseUrl || null,
+    reverseUrl: reverseUrl || null,
+  }).catch(err => console.warn('Thumbnail generation failed (non-critical):', err));
+};
+
 // ── Collections ──
 
 export const getCollections = async () => {
@@ -48,6 +58,9 @@ export const createCoin = async (data) => {
   const existingCoins = await getCoinsByCollection(data.collectionId || data.collection_id);
   const isFirstCoin = existingCoins.length === 0;
 
+  const obImg = data.obverseImage || data.obverse_image || null;
+  const revImg = data.reverseImage || data.reverse_image || null;
+
   const coin = await base44.entities.Coin.create({
     collection_id: data.collectionId || data.collection_id,
     country: data.country || '',
@@ -60,8 +73,8 @@ export const createCoin = async (data) => {
     diameter: data.diameter || '',
     weight: data.weight || '',
     user_grade: data.userGrade || data.user_grade || '',
-    obverse_image: data.obverseImage || data.obverse_image || null,
-    reverse_image: data.reverseImage || data.reverse_image || null,
+    obverse_image: obImg,
+    reverse_image: revImg,
     purchase_price: data.purchasePrice || data.purchase_price || '',
     purchase_date: data.purchaseDate || data.purchase_date || '',
     where_acquired: data.whereAcquired || data.where_acquired || 'Dealer',
@@ -74,10 +87,14 @@ export const createCoin = async (data) => {
     market_value: data.market_value || null,
   });
 
-  const imgUrl = data.obverseImage || data.obverse_image;
-  if (isFirstCoin && imgUrl) {
+  if (isFirstCoin && obImg) {
     const colId = data.collectionId || data.collection_id;
-    await updateCollection(colId, { cover_image: imgUrl });
+    await updateCollection(colId, { cover_image: obImg });
+  }
+
+  // Generate thumbnails in the background (non-blocking)
+  if (obImg || revImg) {
+    generateThumbnails(coin.id, obImg, revImg);
   }
 
   return coin;
