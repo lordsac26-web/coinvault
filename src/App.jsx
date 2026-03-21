@@ -14,6 +14,7 @@ import Analytics from '@/pages/Analytics';
 import Settings from '@/pages/Settings';
 import Catalog from '@/pages/Catalog';
 import PriceGuide from '@/pages/PriceGuide';
+import Album from '@/pages/Album';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -44,6 +45,7 @@ const AuthenticatedApp = () => {
         <Route path="/coins/:id" element={<CoinDetail />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/price-guide" element={<PriceGuide />} />
+        <Route path="/album" element={<Album />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
