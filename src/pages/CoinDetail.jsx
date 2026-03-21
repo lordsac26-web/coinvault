@@ -281,6 +281,7 @@ export default function CoinDetail() {
                     <input
                       type="file"
                       accept="image/*"
+                      capture="environment"
                       className="hidden"
                       onChange={e => {
                         if (e.target.files[0]) handlePhotoSelect(key, e.target.files[0]);

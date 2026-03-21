@@ -510,6 +510,7 @@ export default function CollectionView() {
                           <input
                             type="file"
                             accept="image/*"
+                            capture="environment"
                             className="hidden"
                             onChange={e => {
                               if (e.target.files[0]) handleFileSelect(side, e.target.files[0]);

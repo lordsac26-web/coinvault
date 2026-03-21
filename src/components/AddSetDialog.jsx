@@ -153,7 +153,7 @@ export default function AddSetDialog({ collectionId, onAdded }) {
                 <span className="text-xs font-medium" style={{ color: 'var(--cv-text-muted)' }}>
                   {previews.length > 0 ? 'Add more photos' : 'Tap to add photos'}
                 </span>
-                <input type="file" accept="image/*" multiple onChange={handleFileAdd} className="hidden" />
+                <input type="file" accept="image/*" capture="environment" multiple onChange={handleFileAdd} className="hidden" />
               </label>
             </div>
 
