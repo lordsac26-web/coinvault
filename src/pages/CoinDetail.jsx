@@ -98,8 +98,6 @@ export default function CoinDetail() {
   };
 
   const handleCropped = async (croppedFile) => {
-    // FIX: try/catch on upload — before, a failed upload left the modal stuck
-    // in a permanent uploading spinner with no way to escape
     setUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file: croppedFile });
@@ -107,9 +105,14 @@ export default function CoinDetail() {
       setCoin(prev => ({ ...prev, [editingPhoto]: file_url }));
       setEditingPhoto(null);
       setCropFile(null);
+      // Generate thumbnail in background
+      const thumbField = editingPhoto === 'obverse_image' ? 'obverseUrl' : 'reverseUrl';
+      base44.functions.invoke('generateThumbnail', {
+        coinId: coin.id,
+        [thumbField]: file_url,
+      }).catch(() => {});
     } catch (err) {
       console.error('Photo upload failed:', err);
-      // TODO: show toast — "Upload failed, please try again"
     } finally {
       setUploading(false);
     }
