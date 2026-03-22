@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getCoinsByCollection, createCoin, deleteCoin, getCoins } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
@@ -32,6 +32,48 @@ function triggerDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 100);
 }
  
+function FilePreviewSlot({ side, file, onSelect }) {
+  const [preview, setPreview] = useState(null);
+
+  useEffect(() => {
+    if (!file) { setPreview(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  return (
+    <label
+      className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all"
+      style={{
+        border: `1px dashed ${file ? 'var(--cv-accent)' : 'var(--cv-border)'}`,
+        background: file ? 'var(--cv-accent-bg)' : 'var(--cv-input-bg)',
+      }}
+    >
+      {preview ? (
+        <>
+          <img src={preview} alt={side} className="w-12 h-12 rounded-full object-cover" />
+          <span className="text-[11px]" style={{ color: 'var(--cv-accent)' }}>
+            {side === 'obverse' ? 'Obverse ✓' : 'Reverse ✓'}
+          </span>
+        </>
+      ) : (
+        <>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'var(--cv-bg-card)' }}>
+            <Package className="w-4 h-4" style={{ color: 'var(--cv-text-faint)' }} />
+          </div>
+          <span className="text-[11px] capitalize" style={{ color: 'var(--cv-text-muted)' }}>
+            {side} photo
+          </span>
+        </>
+      )}
+      <input type="file" accept="image/*" capture="environment" className="hidden"
+        onChange={e => { if (e.target.files[0]) onSelect(e.target.files[0]); e.target.value = ''; }} />
+    </label>
+  );
+}
+
 export default function CollectionView() {
   const { id: collectionId } = useParams();
   const [collection, setCollection] = useState(null);
@@ -489,52 +531,14 @@ export default function CollectionView() {
  
                   {/* Photo upload fields */}
                   <div className="grid grid-cols-2 gap-3">
-                    {['obverse', 'reverse'].map(side => {
-                      const file = side === 'obverse' ? obverseFile : reverseFile;
-                      return (
-                        <label
-                          key={side}
-                          className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all"
-                          style={{
-                            border: `1px dashed ${file ? 'var(--cv-accent)' : 'var(--cv-border)'}`,
-                            background: file ? 'var(--cv-accent-bg)' : 'var(--cv-input-bg)',
-                          }}
-                        >
-                          {file ? (
-                            <>
-                              <img
-                                src={URL.createObjectURL(file)}
-                                alt={side}
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                              <span className="text-[11px]" style={{ color: 'var(--cv-accent)' }}>
-                                {side === 'obverse' ? 'Obverse ✓' : 'Reverse ✓'}
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                                style={{ background: 'var(--cv-bg-card)' }}>
-                                <Package className="w-4 h-4" style={{ color: 'var(--cv-text-faint)' }} />
-                              </div>
-                              <span className="text-[11px] capitalize" style={{ color: 'var(--cv-text-muted)' }}>
-                                {side} photo
-                              </span>
-                            </>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            className="hidden"
-                            onChange={e => {
-                              if (e.target.files[0]) handleFileSelect(side, e.target.files[0]);
-                              e.target.value = '';
-                            }}
-                          />
-                        </label>
-                      );
-                    })}
+                    {['obverse', 'reverse'].map(side => (
+                      <FilePreviewSlot
+                        key={side}
+                        side={side}
+                        file={side === 'obverse' ? obverseFile : reverseFile}
+                        onSelect={(f) => handleFileSelect(side, f)}
+                      />
+                    ))}
                   </div>
  
                   {/*

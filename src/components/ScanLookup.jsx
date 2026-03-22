@@ -91,14 +91,14 @@ Be specific with all values. If uncertain, note that in the notes field.`,
     }
   };
 
-  if (showScanner) {
-    return <BarcodeScanner onDetected={handleDetected} onClose={() => { setShowScanner(false); }} />;
-  }
-
   // Cleanup scanner when overlay is closed externally (e.g., back gesture)
   useEffect(() => {
     return () => setShowScanner(false);
   }, []);
+
+  if (showScanner) {
+    return <BarcodeScanner onDetected={handleDetected} onClose={() => { setShowScanner(false); }} />;
+  }
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ background: 'var(--cv-bg)' }}>
