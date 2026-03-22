@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getCoinsByCollection, createCoin, deleteCoin, getCoins } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
 import { Plus, Trash2, ArrowLeft, Coins, FileDown, Loader2, ImageIcon, Package } from 'lucide-react';
+import CoinFilterBar from '@/components/CoinFilterBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -58,6 +59,8 @@ export default function CollectionView() {
   const [showExport, setShowExport] = useState(false);
   const [exportWithImages, setExportWithImages] = useState(true);
   const [allCoins, setAllCoins] = useState([]); // all user coins for pre-populating dropdowns
+  const [filteredCoins, setFilteredCoins] = useState([]);
+  const [hasActiveFilters, setHasActiveFilters] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -87,6 +90,11 @@ export default function CollectionView() {
   );
  
   useEffect(() => { if (collectionId) load(); }, [collectionId]);
+
+  const handleFiltered = useCallback((result, meta) => {
+    setFilteredCoins(result);
+    setHasActiveFilters(meta.search || meta.activeFilterCount > 0);
+  }, []);
  
   const uploadFile = async (file) => {
     if (!file) return null;
@@ -555,7 +563,12 @@ export default function CollectionView() {
  
       {/* Collection tags */}
       <CollectionTags collection={collection} onUpdated={load} />
- 
+
+      {/* Search and filters */}
+      {coins.length > 1 && (
+        <CoinFilterBar coins={coins} onFiltered={handleFiltered} />
+      )}
+
       {/* Coin grid */}
       {coins.length === 0 ? (
         <div className="text-center py-16 sm:py-24">
@@ -572,7 +585,7 @@ export default function CollectionView() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {coins.map(coin => {
+          {(coins.length > 1 ? filteredCoins : coins).map(coin => {
             const isSet = isMultiImageType(coin.entry_type);
             return (
               <div
