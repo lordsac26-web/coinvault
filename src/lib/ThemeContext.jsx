@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 
 const THEMES = {
   dark: {
@@ -119,6 +120,20 @@ const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   const [themeKey, setThemeKey] = useState(() => localStorage.getItem('cvTheme') || 'dark');
+
+  // On mount, load the user's saved default theme from UserSettings
+  useEffect(() => {
+    const loadSavedTheme = async () => {
+      const isAuth = await base44.auth.isAuthenticated();
+      if (!isAuth) return;
+      const settingsList = await base44.entities.UserSettings.list();
+      const saved = settingsList[0]?.default_theme;
+      if (saved && THEMES[saved] && !localStorage.getItem('cvTheme')) {
+        setThemeKey(saved);
+      }
+    };
+    loadSavedTheme().catch(() => {});
+  }, []);
 
   useEffect(() => {
     const theme = THEMES[themeKey] || THEMES.dark;
