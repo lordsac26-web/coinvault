@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, CheckCircle2, Eye } from 'lucide-react';
 import AlbumBook from './AlbumBook';
 import { SLOTS_PER_PAGE } from './AlbumPage';
 
@@ -27,13 +27,19 @@ function normMint(m) {
   return letter || m;
 }
 
-export default function AlbumSeriesRow({ seriesName, coins, yearRange, mintMarks }) {
+export default function AlbumSeriesRow({ seriesName, coins, yearRange, mintMarks, collectionId }) {
   const [expanded, setExpanded] = useState(false);
+  const [ownedOnly, setOwnedOnly] = useState(false);
 
-  const slots = useMemo(
+  const allSlots = useMemo(
     () => buildSlots(coins, yearRange[0], yearRange[1], mintMarks),
     [coins, yearRange, mintMarks]
   );
+
+  const slots = useMemo(() => {
+    if (!ownedOnly) return allSlots;
+    return allSlots.filter(s => s.coin);
+  }, [allSlots, ownedOnly]);
 
   // Chunk slots into pages of 20 (4 cols × 5 rows)
   const pages = useMemo(() => {
@@ -45,8 +51,8 @@ export default function AlbumSeriesRow({ seriesName, coins, yearRange, mintMarks
     return result;
   }, [slots]);
 
-  const filled = slots.filter(s => s.coin).length;
-  const total = slots.length;
+  const filled = allSlots.filter(s => s.coin).length;
+  const total = allSlots.length;
   const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
 
   return (
@@ -98,10 +104,29 @@ export default function AlbumSeriesRow({ seriesName, coins, yearRange, mintMarks
         </div>
       </button>
 
-      {/* Album book */}
+      {/* Filter + Album book */}
       {expanded && (
         <div className="p-3 sm:p-4">
-          <AlbumBook pages={pages} seriesName={seriesName} />
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => setOwnedOnly(v => !v)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all"
+              style={{
+                background: ownedOnly ? 'var(--cv-accent-bg)' : 'transparent',
+                color: ownedOnly ? 'var(--cv-accent)' : 'var(--cv-text-muted)',
+                border: `1px solid ${ownedOnly ? 'var(--cv-accent-border)' : 'var(--cv-border)'}`,
+              }}
+            >
+              <Eye className="w-3 h-3" />
+              {ownedOnly ? 'Showing owned only' : 'Show owned only'}
+            </button>
+            {ownedOnly && (
+              <span className="text-[10px]" style={{ color: 'var(--cv-text-faint)' }}>
+                {filled} coin{filled !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          <AlbumBook pages={pages} seriesName={seriesName} collectionId={collectionId} />
         </div>
       )}
     </div>
