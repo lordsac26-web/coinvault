@@ -3,6 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, CircleDollarSign, ScanBarcode, Grid3X3 } from 'lucide-react';
 import SpotPriceWidget from '@/components/SpotPriceWidget';
 import ScanLookup from '@/components/ScanLookup';
+import GlobalSearch from '@/components/GlobalSearch';
 
 const navItems = [
   { label: 'Collections', path: '/dashboard', icon: LayoutGrid },
@@ -42,6 +43,7 @@ export default function Layout() {
             <span className="text-base font-bold tracking-wide" style={{ fontFamily: "'Playfair Display', Georgia, serif", color: 'var(--cv-accent)' }}>CoinVault</span>
           </Link>
           <div className="flex items-center gap-0.5">
+            <GlobalSearch />
             {navItems.map(({ label, path, icon: Icon }) => (
               <Link key={path} to={path}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
@@ -71,10 +73,13 @@ export default function Layout() {
             </div>
             <span className="text-sm font-bold tracking-wide" style={{ fontFamily: "'Playfair Display', Georgia, serif", color: 'var(--cv-accent)' }}>CoinVault</span>
           </Link>
-          <button onClick={toggleSpotWidget} className="p-1.5 rounded-lg transition-colors"
-            style={showSpotWidget ? { color: 'var(--cv-accent)', background: 'var(--cv-accent-bg)' } : { color: 'var(--cv-text-muted)' }}>
-            <CircleDollarSign className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <GlobalSearch compact />
+            <button onClick={toggleSpotWidget} className="p-1.5 rounded-lg transition-colors"
+              style={showSpotWidget ? { color: 'var(--cv-accent)', background: 'var(--cv-accent-bg)' } : { color: 'var(--cv-text-muted)' }}>
+              <CircleDollarSign className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
