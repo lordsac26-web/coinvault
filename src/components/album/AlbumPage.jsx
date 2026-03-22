@@ -4,7 +4,7 @@ const COLS = 4;
 const ROWS = 5;
 export const SLOTS_PER_PAGE = COLS * ROWS;
 
-export default function AlbumPage({ slots, seriesName, pageNumber, totalPages }) {
+export default function AlbumPage({ slots, seriesName, pageNumber, totalPages, collectionId }) {
   // Pad to exactly 20 slots
   const padded = [...slots];
   while (padded.length < SLOTS_PER_PAGE) {
@@ -49,6 +49,7 @@ export default function AlbumPage({ slots, seriesName, pageNumber, totalPages })
               year={slot.year}
               mintMark={slot.mintMark}
               coin={slot.coin}
+              collectionId={collectionId}
             />
           ))}
         </div>

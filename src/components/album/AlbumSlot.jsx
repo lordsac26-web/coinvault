@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { RotateCcw, Plus, Coins } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function AlbumSlot({ year, coin, mintMark }) {
+export default function AlbumSlot({ year, coin, mintMark, collectionId }) {
   const [showReverse, setShowReverse] = useState(false);
 
   const label = mintMark && mintMark !== 'None' ? `${year}-${mintMark}` : String(year);
@@ -15,12 +15,13 @@ export default function AlbumSlot({ year, coin, mintMark }) {
     ? (coin?.reverse_thumb || coin?.reverse_image)
     : (coin?.obverse_thumb || coin?.obverse_image);
 
-  // Empty slot — white cardboard "add more" insert
+  // Empty slot — white cardboard "add more" insert, links to collection page
   if (!coin) {
+    const addLink = collectionId ? `/collections/${collectionId}` : '/dashboard';
     return (
-      <div className="flex flex-col items-center" style={{ perspective: '600px' }}>
+      <Link to={addLink} className="flex flex-col items-center" style={{ perspective: '600px' }}>
         <div
-          className="w-full aspect-[3/4] rounded-sm flex flex-col items-center justify-center gap-1.5 relative"
+          className="w-full aspect-[3/4] rounded-sm flex flex-col items-center justify-center gap-1.5 relative transition-all hover:border-amber-400 hover:shadow-md cursor-pointer"
           style={{
             background: '#f5f0e8',
             border: '2px solid #e0d8c8',
@@ -53,7 +54,7 @@ export default function AlbumSlot({ year, coin, mintMark }) {
             </span>
           </div>
         </div>
-      </div>
+      </Link>
     );
   }
 
