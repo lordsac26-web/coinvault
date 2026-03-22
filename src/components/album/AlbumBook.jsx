@@ -53,7 +53,7 @@ function NavRow({ currentPage, totalPages, goNext, goPrev, setDirection, setCurr
   );
 }
 
-export default function AlbumBook({ pages, seriesName }) {
+export default function AlbumBook({ pages, seriesName, collectionId }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -108,6 +108,7 @@ export default function AlbumBook({ pages, seriesName }) {
                   seriesName={seriesName}
                   pageNumber={currentPage + 1}
                   totalPages={totalPages}
+                  collectionId={collectionId}
                 />
               </motion.div>
             </AnimatePresence>
