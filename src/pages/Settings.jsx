@@ -113,9 +113,21 @@ export default function Settings() {
               </div>
               <p className="text-xs font-semibold" style={{ color: 'var(--cv-text)' }}>{theme.name}</p>
               <p className="text-[10px]" style={{ color: 'var(--cv-text-muted)' }}>{theme.desc}</p>
+              {settings?.default_theme === key && (
+                <p className="text-[9px] font-bold mt-1" style={{ color: 'var(--cv-accent)' }}>★ Default</p>
+              )}
             </button>
           ))}
         </div>
+        <Button
+          onClick={async () => {
+            await save({ default_theme: themeKey });
+          }}
+          className="mt-3 gap-2 h-9 rounded-xl text-xs"
+          style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: 'none' }}
+        >
+          <Palette className="w-3.5 h-3.5" /> Save "{themes[themeKey]?.name}" as Default
+        </Button>
       </div>
 
       <div className="rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
