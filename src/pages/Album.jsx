@@ -278,6 +278,7 @@ export default function Album() {
             coins={sg.coins}
             yearRange={sg.yearRange}
             mintMarks={sg.mintMarks}
+            collectionId={sg.coins[0]?.collection_id}
           />
         ))
       )}

@@ -126,7 +126,7 @@ export default function AlbumSeriesRow({ seriesName, coins, yearRange, mintMarks
               </span>
             )}
           </div>
-          <AlbumBook pages={pages} seriesName={seriesName} collectionId={collectionId} />
+          <AlbumBook pages={pages} seriesName={seriesName} collectionId={collectionId || coins[0]?.collection_id} />
         </div>
       )}
     </div>
