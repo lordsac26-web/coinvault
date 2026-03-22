@@ -28,22 +28,25 @@ export default function Settings() {
     setSettings({ ...settings, ...updates });
   };
 
+  const triggerDownload = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  };
+
   const handleExportJSON = async () => {
     const data = await exportAllData();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'coinvault-backup.json'; a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(blob, 'coinvault-backup.json');
   };
 
   const handleExportCSV = async () => {
     const csv = await exportToCSV();
     const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'coinvault-coins.csv'; a.click();
-    URL.revokeObjectURL(url);
+    triggerDownload(blob, 'coinvault-coins.csv');
   };
 
   if (loading) {

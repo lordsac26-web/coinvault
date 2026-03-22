@@ -48,7 +48,7 @@ export default function PriceGuide() {
                 {coin.obverse_image ? <img src={coin.obverse_image} alt="" className="w-full h-full object-contain" loading="lazy" /> : <Coins className="w-5 h-5" style={{ color: 'var(--cv-text-faint)' }} />}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium truncate" style={{ color: 'var(--cv-text)' }}>{coin.year} {coin.denomination}</h3>
+                <h3 className="text-sm font-medium truncate" style={{ color: 'var(--cv-text)' }}>{[coin.year, coin.denomination].filter(Boolean).join(' ') || 'Unnamed'}</h3>
                 <p className="text-xs truncate" style={{ color: 'var(--cv-text-muted)' }}>{coin.country}{coin.user_grade ? ` · ${coin.user_grade}` : ''}</p>
               </div>
               <div className="text-right shrink-0 flex flex-col items-end gap-0.5">
