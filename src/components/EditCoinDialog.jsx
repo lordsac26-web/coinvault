@@ -3,8 +3,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { updateCoin } from '@/components/storage';
+import { identifyCoin } from '@/components/coinAI';
 
 const FIELDS = [
   { key: 'country', label: 'Country' },
@@ -38,6 +39,40 @@ export default function EditCoinDialog({ coin, open, onOpenChange, onSaved }) {
     return init;
   });
   const [saving, setSaving] = useState(false);
+  const [identifying, setIdentifying] = useState(false);
+
+  const handleAIIdentify = async () => {
+    const obverse = coin?.obverse_image;
+    const reverse = coin?.reverse_image;
+    if (!obverse && !reverse) return;
+    setIdentifying(true);
+    const images = [obverse, reverse].filter(Boolean);
+    const result = await identifyCoin(images[0], images[1] || images[0]);
+    const mapping = {
+      country: result.country,
+      denomination: result.denomination,
+      year: result.year,
+      mint_mark: result.mint_mark,
+      coin_series: result.coin_series,
+      composition: result.composition,
+      weight: result.weight,
+      diameter: result.diameter,
+      user_grade: result.suggested_grade,
+    };
+    setForm(prev => {
+      const next = { ...prev };
+      for (const [key, val] of Object.entries(mapping)) {
+        if (val) next[key] = val;
+      }
+      if (result.identification_notes) {
+        next.condition_notes = [prev.condition_notes, result.identification_notes].filter(Boolean).join('\n');
+      }
+      return next;
+    });
+    setIdentifying(false);
+  };
+
+  const hasImages = coin?.obverse_image || coin?.reverse_image;
 
   const handleSave = async () => {
     setSaving(true);
@@ -75,6 +110,23 @@ export default function EditCoinDialog({ coin, open, onOpenChange, onSaved }) {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 mt-2">
+          {/* AI Identify button */}
+          {hasImages && (
+            <Button
+              onClick={handleAIIdentify}
+              disabled={identifying}
+              variant="outline"
+              className="w-full h-10 rounded-xl font-semibold gap-2 text-sm"
+              style={{
+                background: identifying ? 'var(--cv-accent-bg)' : 'transparent',
+                borderColor: 'var(--cv-accent-border)',
+                color: 'var(--cv-accent)',
+              }}
+            >
+              {identifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {identifying ? 'Identifying coin...' : 'AI Identify & Fill'}
+            </Button>
+          )}
           {isSet && (
             <div>
               <label className="text-[11px] uppercase tracking-wide mb-1 block" style={{ color: 'var(--cv-text-muted)' }}>Name</label>
