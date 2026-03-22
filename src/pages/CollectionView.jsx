@@ -583,6 +583,11 @@ export default function CollectionView() {
             Tap "Add" to add your first coin
           </p>
         </div>
+      ) : coins.length > 1 && filteredCoins.length === 0 && hasActiveFilters ? (
+        <div className="text-center py-16">
+          <p className="text-sm" style={{ color: 'var(--cv-text-muted)' }}>No coins match your filters</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--cv-text-faint)' }}>Try adjusting your filters</p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {(coins.length > 1 ? filteredCoins : coins).map(coin => {
