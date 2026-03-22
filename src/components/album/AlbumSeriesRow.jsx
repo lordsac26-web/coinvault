@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, CheckCircle2 } from 'lucide-react';
-import AlbumSlot from './AlbumSlot';
+import AlbumBook from './AlbumBook';
+import { SLOTS_PER_PAGE } from './AlbumPage';
 
 // Build a slot map: for each year in range, check if we have a coin
 function buildSlots(coins, yearStart, yearEnd, mintMarks) {
@@ -22,18 +23,27 @@ function buildSlots(coins, yearStart, yearEnd, mintMarks) {
 
 function normMint(m) {
   if (!m || m === 'None' || m.toLowerCase().includes('none') || m.toLowerCase().includes('philadelphia')) return 'P';
-  // Extract just the letter(s) from strings like "D (Denver)" or "S"
   const letter = m.match(/^([A-Z])/)?.[1];
   return letter || m;
 }
 
 export default function AlbumSeriesRow({ seriesName, coins, yearRange, mintMarks }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const slots = useMemo(
     () => buildSlots(coins, yearRange[0], yearRange[1], mintMarks),
     [coins, yearRange, mintMarks]
   );
+
+  // Chunk slots into pages of 20 (4 cols × 5 rows)
+  const pages = useMemo(() => {
+    const result = [];
+    for (let i = 0; i < slots.length; i += SLOTS_PER_PAGE) {
+      result.push(slots.slice(i, i + SLOTS_PER_PAGE));
+    }
+    if (result.length === 0) result.push([]);
+    return result;
+  }, [slots]);
 
   const filled = slots.filter(s => s.coin).length;
   const total = slots.length;
@@ -63,7 +73,7 @@ export default function AlbumSeriesRow({ seriesName, coins, yearRange, mintMarks
             {seriesName}
           </h3>
           <p className="text-[11px] mt-0.5" style={{ color: 'var(--cv-text-muted)' }}>
-            {yearRange[0]}–{yearRange[1]} · {filled}/{total} collected
+            {yearRange[0]}–{yearRange[1]} · {filled}/{total} collected · {pages.length} page{pages.length !== 1 ? 's' : ''}
           </p>
         </div>
         {/* Progress ring */}
@@ -88,21 +98,10 @@ export default function AlbumSeriesRow({ seriesName, coins, yearRange, mintMarks
         </div>
       </button>
 
-      {/* Slot grid */}
+      {/* Album book */}
       {expanded && (
         <div className="p-3 sm:p-4">
-          <div className="grid gap-2" style={{
-            gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))',
-          }}>
-            {slots.map((slot, i) => (
-              <AlbumSlot
-                key={`${slot.year}-${slot.mintMark || ''}-${i}`}
-                year={slot.year}
-                mintMark={slot.mintMark}
-                coin={slot.coin}
-              />
-            ))}
-          </div>
+          <AlbumBook pages={pages} seriesName={seriesName} />
         </div>
       )}
     </div>
