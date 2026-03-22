@@ -1,34 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getCoins, getCollections } from '@/components/storage';
-import { Search, Coins } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PageLoader } from './Dashboard'; // FIX: shared loader
-
-// FIX: Debounce hook — prevents filtering the full coin list on every keystroke.
-// Before: every keypress re-ran the filter synchronously. Fine for small
-// collections, but noticeably laggy at 200+ coins.
-function useDebounce(value, delay = 150) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-}
+import { Coins } from 'lucide-react';
+import { PageLoader } from './Dashboard';
+import CoinFilterBar from '@/components/CoinFilterBar';
 
 export default function Catalog() {
   const [coins, setCoins] = useState([]);
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filterCountry, setFilterCountry] = useState('all');
-  const [filterGrade, setFilterGrade] = useState('all'); // FIX: new grade filter
-  const [sortBy, setSortBy] = useState('newest');
-
-  // FIX: Debounced search — UI updates immediately but filtering waits 150ms
-  const debouncedSearch = useDebounce(search, 150);
+  const [filtered, setFiltered] = useState([]);
+  const [filterMeta, setFilterMeta] = useState({ search: '', activeFilterCount: 0 });
 
   useEffect(() => {
     const load = async () => {
@@ -40,58 +22,10 @@ export default function Catalog() {
     load();
   }, []);
 
-  // FIX: Memoized derived data — countries, grades, and filtered results only
-  // recompute when their specific dependencies change, not on every render.
-  const countries = useMemo(
-    () => [...new Set(coins.map(c => c.country).filter(Boolean))].sort(),
-    [coins]
-  );
-
-  // FIX: Grade filter options derived from actual data in the collection
-  const grades = useMemo(
-    () => [...new Set(coins.map(c => c.user_grade || c.ai_grade).filter(Boolean))].sort(),
-    [coins]
-  );
-
-  const filtered = useMemo(() => {
-    let result = coins.filter(c => {
-      // FIX: Extended search to include mint_mark and personal_notes —
-      // collectors often remember notes or mint mark context when searching.
-      // Also includes collection name via a separate lookup below.
-      const col = collections.find(col => col.id === c.collection_id);
-      const text = [
-        c.country,
-        c.denomination,
-        c.year,
-        c.coin_series,
-        c.composition,
-        c.mint_mark,        // FIX: was excluded before
-        c.personal_notes,   // FIX: was excluded before
-        col?.name,          // FIX: was excluded before
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-
-      const matchesSearch = !debouncedSearch || text.includes(debouncedSearch.toLowerCase());
-      const matchesCountry = filterCountry === 'all' || c.country === filterCountry;
-      // FIX: Apply grade filter
-      const matchesGrade =
-        filterGrade === 'all' ||
-        c.user_grade === filterGrade ||
-        c.ai_grade === filterGrade;
-
-      return matchesSearch && matchesCountry && matchesGrade;
-    });
-
-    return [...result].sort((a, b) => {
-      if (sortBy === 'newest') return new Date(b.created_date) - new Date(a.created_date);
-      if (sortBy === 'oldest') return new Date(a.created_date) - new Date(b.created_date);
-      if (sortBy === 'year') return (parseInt(a.year) || 0) - (parseInt(b.year) || 0);
-      if (sortBy === 'country') return (a.country || '').localeCompare(b.country || '');
-      return 0;
-    });
-  }, [coins, collections, debouncedSearch, filterCountry, filterGrade, sortBy]);
+  const handleFiltered = useCallback((result, meta) => {
+    setFiltered(result);
+    setFilterMeta(meta);
+  }, []);
 
   if (loading) return <PageLoader />;
 
@@ -104,101 +38,11 @@ export default function Catalog() {
         Catalog
       </h1>
 
-      <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-3 mb-5">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-            style={{ color: 'var(--cv-text-faint)' }}
-          />
-          {/* FIX: search state updates immediately for responsive feel;
-              actual filtering is debounced via debouncedSearch */}
-          <Input
-            placeholder="Search coins, notes, collections..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-10 rounded-xl"
-            style={{
-              background: 'var(--cv-input-bg)',
-              border: '1px solid var(--cv-accent-border)',
-              color: 'var(--cv-text)',
-            }}
-          />
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          {/* Country filter */}
-          <Select value={filterCountry} onValueChange={setFilterCountry}>
-            <SelectTrigger
-              className="flex-1 sm:w-36 h-10 rounded-xl text-sm"
-              style={{
-                background: 'var(--cv-input-bg)',
-                border: '1px solid var(--cv-accent-border)',
-                color: 'var(--cv-text)',
-              }}
-            >
-              <SelectValue placeholder="Country" />
-            </SelectTrigger>
-            <SelectContent style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
-              <SelectItem value="all" style={{ color: 'var(--cv-text)' }}>All Countries</SelectItem>
-              {countries.map(c => (
-                <SelectItem key={c} value={c} style={{ color: 'var(--cv-text)' }}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* FIX: Grade filter — new, was missing entirely before */}
-          {grades.length > 0 && (
-            <Select value={filterGrade} onValueChange={setFilterGrade}>
-              <SelectTrigger
-                className="flex-1 sm:w-32 h-10 rounded-xl text-sm"
-                style={{
-                  background: 'var(--cv-input-bg)',
-                  border: '1px solid var(--cv-accent-border)',
-                  color: 'var(--cv-text)',
-                }}
-              >
-                <SelectValue placeholder="Grade" />
-              </SelectTrigger>
-              <SelectContent style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
-                <SelectItem value="all" style={{ color: 'var(--cv-text)' }}>All Grades</SelectItem>
-                {grades.map(g => (
-                  <SelectItem key={g} value={g} style={{ color: 'var(--cv-text)' }}>{g}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          {/* Sort */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger
-              className="flex-1 sm:w-36 h-10 rounded-xl text-sm"
-              style={{
-                background: 'var(--cv-input-bg)',
-                border: '1px solid var(--cv-accent-border)',
-                color: 'var(--cv-text)',
-              }}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)' }}>
-              {[
-                ['newest', 'Newest'],
-                ['oldest', 'Oldest'],
-                ['year', 'By Year'],
-                ['country', 'By Country'],
-              ].map(([v, l]) => (
-                <SelectItem key={v} value={v} style={{ color: 'var(--cv-text)' }}>{l}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <CoinFilterBar coins={coins} collections={collections} onFiltered={handleFiltered} />
 
       <p className="text-[11px] mb-4 font-medium" style={{ color: 'var(--cv-text-muted)' }}>
         {filtered.length} coin{filtered.length !== 1 ? 's' : ''}
-        {(filterCountry !== 'all' || filterGrade !== 'all' || debouncedSearch) && (
-          <span> · filtered</span>
-        )}
+        {(filterMeta.search || filterMeta.activeFilterCount > 0) && <span> · filtered</span>}
       </p>
 
       {filtered.length === 0 ? (
@@ -214,13 +58,9 @@ export default function Catalog() {
           </p>
           {/* FIX: Clear filters button when filtered results are empty */}
           {coins.length > 0 && (
-            <button
-              onClick={() => { setSearch(''); setFilterCountry('all'); setFilterGrade('all'); }}
-              className="text-xs mt-2 underline"
-              style={{ color: 'var(--cv-accent)' }}
-            >
-              Clear filters
-            </button>
+          <p className="text-xs mt-2" style={{ color: 'var(--cv-text-faint)' }}>
+            Try adjusting your filters
+          </p>
           )}
         </div>
       ) : (
