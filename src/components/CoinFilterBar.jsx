@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -26,7 +26,7 @@ export default function CoinFilterBar({ coins, collections, onFiltered, showSort
   ].filter(Boolean).length;
 
   // Apply filters and pass results up
-  useMemo(() => {
+  useEffect(() => {
     const q = search.toLowerCase();
     let result = coins.filter(c => {
       const col = collections?.find(col => col.id === c.collection_id);
@@ -59,7 +59,7 @@ export default function CoinFilterBar({ coins, collections, onFiltered, showSort
     });
 
     onFiltered(result, { search, activeFilterCount });
-  }, [coins, collections, search, filterCountry, filterSeries, filterGrade, filterComposition, filterYearFrom, filterYearTo, sortBy]);
+  }, [coins, collections, search, filterCountry, filterSeries, filterGrade, filterComposition, filterYearFrom, filterYearTo, sortBy, activeFilterCount]);
 
   const clearAll = () => {
     setSearch('');
