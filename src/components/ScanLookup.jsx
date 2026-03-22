@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader2, ExternalLink, Plus, Search, ScanBarcode, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,8 +92,13 @@ Be specific with all values. If uncertain, note that in the notes field.`,
   };
 
   if (showScanner) {
-    return <BarcodeScanner onDetected={handleDetected} onClose={() => setShowScanner(false)} />;
+    return <BarcodeScanner onDetected={handleDetected} onClose={() => { setShowScanner(false); }} />;
   }
+
+  // Cleanup scanner when overlay is closed externally (e.g., back gesture)
+  useEffect(() => {
+    return () => setShowScanner(false);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ background: 'var(--cv-bg)' }}>

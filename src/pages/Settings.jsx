@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getSettings, saveSettings, exportAllData, exportToCSV } from '@/components/storage';
 import { Download, Sparkles, Palette, LogIn, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,36 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
+
+function CurrencyInput({ value, onSave }) {
+  const [local, setLocal] = useState(value);
+  const timerRef = useRef(null);
+
+  useEffect(() => { setLocal(value); }, [value]);
+
+  const handleChange = (e) => {
+    const v = e.target.value;
+    setLocal(v);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => onSave(v), 600);
+  };
+
+  const handleBlur = () => {
+    clearTimeout(timerRef.current);
+    if (local !== value) onSave(local);
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-sm" style={{ color: 'var(--cv-text)' }}>Currency</p>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--cv-text-muted)' }}>Display currency for values</p>
+      </div>
+      <Input value={local} onChange={handleChange} onBlur={handleBlur}
+        className="w-20 text-center h-10 rounded-xl shrink-0" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
+    </div>
+  );
+}
 
 export default function Settings() {
   const [settings, setSettings] = useState(null);
@@ -152,14 +182,7 @@ export default function Settings() {
             </div>
             <Switch checked={settings?.ai_auto_enrich || false} onCheckedChange={v => save({ ai_auto_enrich: v })} />
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-sm" style={{ color: 'var(--cv-text)' }}>Currency</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--cv-text-muted)' }}>Display currency for values</p>
-            </div>
-            <Input value={settings?.currency || 'USD'} onChange={e => save({ currency: e.target.value })}
-              className="w-20 text-center h-10 rounded-xl shrink-0" style={{ background: 'var(--cv-input-bg)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }} />
-          </div>
+          <CurrencyInput value={settings?.currency || 'USD'} onSave={(v) => save({ currency: v })} />
         </div>
       </div>
 

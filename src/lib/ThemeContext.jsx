@@ -140,6 +140,9 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     Object.entries(theme.vars).forEach(([key, val]) => root.style.setProperty(key, val));
     localStorage.setItem('cvTheme', themeKey);
+    // Update meta theme-color to match the current theme's background
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme.vars['--cv-bg']);
   }, [themeKey]);
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { identifyCoin } from '@/components/coinAI';
 import { createCoin } from '@/components/storage';
@@ -15,6 +15,15 @@ const inputStyle = {
 };
 
 function PhotoUploadSlot({ label, file, onSelect }) {
+  const [preview, setPreview] = useState(null);
+
+  useEffect(() => {
+    if (!file) { setPreview(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
   return (
     <label
       className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl cursor-pointer transition-all aspect-square"
@@ -23,9 +32,9 @@ function PhotoUploadSlot({ label, file, onSelect }) {
         background: file ? 'var(--cv-accent-bg)' : 'var(--cv-input-bg)',
       }}
     >
-      {file ? (
+      {preview ? (
         <>
-          <img src={URL.createObjectURL(file)} alt={label} className="w-16 h-16 rounded-full object-cover" />
+          <img src={preview} alt={label} className="w-16 h-16 rounded-full object-cover" />
           <span className="text-[11px] font-medium" style={{ color: 'var(--cv-accent)' }}>{label} ✓</span>
         </>
       ) : (

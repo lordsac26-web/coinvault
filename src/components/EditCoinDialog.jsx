@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -30,16 +30,25 @@ const inputStyle = {
 };
 
 export default function EditCoinDialog({ coin, open, onOpenChange, onSaved }) {
-  const [form, setForm] = useState(() => {
+  const buildInitForm = (c) => {
     const init = {};
-    FIELDS.forEach(f => { init[f.key] = coin?.[f.key] || ''; });
-    init.personal_notes = coin?.personal_notes || '';
-    init.condition_notes = coin?.condition_notes || '';
-    init.set_name = coin?.set_name || '';
+    FIELDS.forEach(f => { init[f.key] = c?.[f.key] || ''; });
+    init.personal_notes = c?.personal_notes || '';
+    init.condition_notes = c?.condition_notes || '';
+    init.set_name = c?.set_name || '';
     return init;
-  });
+  };
+
+  const [form, setForm] = useState(() => buildInitForm(coin));
   const [saving, setSaving] = useState(false);
   const [identifying, setIdentifying] = useState(false);
+
+  // Bug fix: reinitialize form when a different coin is passed
+  useEffect(() => {
+    if (open && coin) {
+      setForm(buildInitForm(coin));
+    }
+  }, [coin?.id, open]);
 
   const handleAIIdentify = async () => {
     const obverse = coin?.obverse_image;

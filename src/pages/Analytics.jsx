@@ -5,7 +5,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
-import { PageLoader } from './Dashboard'; // FIX: shared loader
+import { PageLoader } from './Dashboard';
+import { useTheme } from '@/lib/ThemeContext';
  
 // FIX: Gold-toned palette kept for thematic appropriateness, but split into
 // light/dark variants so the chart adapts to the user's theme preference.
@@ -18,16 +19,11 @@ const COLORS_DARK  = ['#e8c97a', '#f0d88c', '#c9a84c', '#d4b870', '#bfa44e', '#a
 export default function Analytics() {
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isDark, setIsDark] = useState(false);
+  const { themeKey } = useTheme();
+  const isDark = themeKey !== 'light';
  
   useEffect(() => {
-    // Detect theme for chart color selection
-    setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
- 
     const load = async () => {
-      // FIX: Removed wasted getCollections() call — the result was destructured
-      // away and never used: `const [c] = await Promise.all([getCoins(), getCollections()])`.
-      // Now only fetches what this page actually needs.
       const coins = await getCoins();
       setCoins(coins);
       setLoading(false);
@@ -273,4 +269,3 @@ export default function Analytics() {
     </div>
   );
 }
- 
