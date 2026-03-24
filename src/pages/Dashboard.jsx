@@ -271,6 +271,8 @@ export default function Dashboard() {
   const [showCreate, setShowCreate]   = useState(false);
   const [newCol, setNewCol]           = useState({ name: '', description: '', type: 'Custom' });
   const [activeTag, setActiveTag]     = useState(null);
+  const [page, setPage]               = useState(1);
+  const PAGE_SIZE = 12;
 
   const load = async () => {
     setLoading(true);
@@ -358,7 +360,16 @@ export default function Dashboard() {
     ? collections.filter(c => (c.tags || []).includes(activeTag))
     : collections;
 
+  const totalPages = Math.ceil(filteredCollections.length / PAGE_SIZE);
+  const pagedCollections = filteredCollections.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   // ── Mutations ────────────────────────────────────────────────────────────
+
+  // Reset to page 1 when tag filter changes
+  const handleTagChange = (tag) => {
+    setActiveTag(activeTag === tag ? null : tag);
+    setPage(1);
+  };
 
   const handleCreate = async () => {
     if (!newCol.name.trim()) return;
@@ -515,7 +526,7 @@ export default function Dashboard() {
           {allTags.map(tag => (
             <button
               key={tag}
-              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              onClick={() => handleTagChange(tag)}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
               style={activeTag === tag
                 ? { background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: '1px solid var(--cv-accent)' }
@@ -548,19 +559,43 @@ export default function Dashboard() {
           <p className="text-xs mt-1" style={{ color: 'var(--cv-text-faint)' }}>Tap "New" to create your first collection</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
-          {filteredCollections.map((col, i) => (
+        <>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
+          {pagedCollections.map((col, i) => (
             <CollectionCard
               key={col.id}
               col={col}
               coinCount={coins.filter(c => c.collection_id === col.id).length}
               onDelete={handleDelete}
               onUpdated={load}
-              index={i}
+              index={(page - 1) * PAGE_SIZE + i}
             />
           ))}
         </div>
-      )}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-30"
+              style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)', color: 'var(--cv-text)' }}
+            >
+              ← Prev
+            </button>
+            <span className="text-xs px-2" style={{ color: 'var(--cv-text-muted)' }}>
+              Page {page} of {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-30"
+              style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)', color: 'var(--cv-text)' }}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+        </>
 
       {/* ── Bottom panels (activity + breakdowns) ───────────────────────── */}
       {coins.length > 0 && (
