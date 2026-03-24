@@ -596,6 +596,7 @@ export default function Dashboard() {
           </div>
         )}
         </>
+      )}
 
       {/* ── Bottom panels (activity + breakdowns) ───────────────────────── */}
       {coins.length > 0 && (
