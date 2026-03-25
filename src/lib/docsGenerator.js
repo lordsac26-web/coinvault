@@ -34,15 +34,7 @@ function drawPageChrome(doc, pageNum, totalPages, section) {
   // Dark background
   rgb(doc, ...DARK_BG); rect(doc, 0, 0, W, H);
 
-  // Subtle noise overlay (dots pattern)
-  doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0);
-  for (let i = 0; i < 40; i++) {
-    const x = (i * 37.3) % W;
-    const y = (i * 53.7) % H;
-    doc.setFillColor(255, 255, 255, 0.015);
-    doc.circle(x, y, 0.3, 'F');
-  }
+  // (noise overlay skipped — alpha not supported in jsPDF rgb mode)
 
   // Top header bar
   rgb(doc, ...DARK_CARD); rect(doc, 0, 0, W, 12);
@@ -120,7 +112,7 @@ function callout(doc, y, text, type = 'tip') {
   const boxH = lines.length * 3.6 + 8;
 
   rgb(doc, ...bg); doc.roundedRect(ML, y, CW, boxH, 2, 2, 'F');
-  doc.setDrawColor(...c, 0.6);
+  doc.setDrawColor(...c);
   doc.setLineWidth(0.5);
   doc.roundedRect(ML, y, CW, boxH, 2, 2, 'S');
   // Left accent bar
@@ -160,7 +152,7 @@ function platformBadge(doc, x, y, platform) {
 
 function drawMobileMockup(doc, x, y, w, h, title, lines = []) {
   // Phone shell
-  doc.setDrawColor(...GOLD, 0.5);
+  doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.6);
   doc.setFillColor(...DARK_CARD);
   doc.roundedRect(x, y, w, h, 3, 3, 'FD');
@@ -240,7 +232,7 @@ function drawDesktopMockup(doc, x, y, w, h, activePage) {
   // Window shell
   doc.setFillColor(...DARK_BG);
   doc.roundedRect(x, y, w, h, 2, 2, 'F');
-  doc.setDrawColor(...GOLD, 0.4);
+  doc.setDrawColor(...FAINT);
   doc.setLineWidth(0.5);
   doc.roundedRect(x, y, w, h, 2, 2, 'S');
   // Nav bar
@@ -280,7 +272,7 @@ function addCoverPage(doc) {
   rgb(doc, ...DARK_BG); rect(doc, 0, 0, W, H);
 
   // Large background coin motif
-  doc.setDrawColor(...GOLD, 0.04);
+  doc.setDrawColor(...FAINT);
   doc.setLineWidth(0.3);
   for (let r = 5; r < 80; r += 8) doc.circle(W / 2, 110, r, 'S');
 
@@ -289,10 +281,10 @@ function addCoverPage(doc) {
 
   // Centered coin logo
   const cx = W / 2, cy = 85;
-  // Outer glow
-  doc.setFillColor(201, 168, 76, 0.1);
+  // Outer rings
+  doc.setFillColor(40, 32, 10);
   doc.circle(cx, cy, 28, 'F');
-  doc.setFillColor(201, 168, 76, 0.15);
+  doc.setFillColor(50, 40, 12);
   doc.circle(cx, cy, 22, 'F');
   // Coin body
   rgb(doc, ...GOLD); doc.circle(cx, cy, 16, 'F');
@@ -300,6 +292,7 @@ function addCoverPage(doc) {
   doc.setDrawColor(...GOLD_LIGHT);
   doc.setLineWidth(0.4);
   doc.circle(cx, cy, 12, 'S');
+  // (no alpha needed)
   rgb(doc, 201, 168, 76); doc.circle(cx, cy, 3, 'F');
   rgb(doc, ...DARK_BG); doc.circle(cx, cy, 1.5, 'F');
 
@@ -319,7 +312,7 @@ function addCoverPage(doc) {
 
   // Version pill
   rgb(doc, ...DARK_CARD); doc.roundedRect(W / 2 - 20, 135, 40, 9, 2, 2, 'F');
-  doc.setDrawColor(...GOLD, 0.5);
+  doc.setDrawColor(...GOLD);
   doc.setLineWidth(0.4);
   doc.roundedRect(W / 2 - 20, 135, 40, 9, 2, 2, 'S');
   textRgb(doc, ...GOLD_LIGHT);
@@ -825,7 +818,7 @@ function addGuideSection(doc, startPage) {
       if (step.tip) {
         let ty = y + 14 + bodyLines.length * 3.5 + 3;
         rgb(doc, [30, 24, 6]); doc.roundedRect(ML + 5, ty, CW - 10, tipLines.length * 3.2 + 8, 1.5, 1.5, 'F');
-        doc.setDrawColor(...GOLD, 0.4);
+        doc.setDrawColor(...GOLD);
         doc.setLineWidth(0.3);
         doc.roundedRect(ML + 5, ty, CW - 10, tipLines.length * 3.2 + 8, 1.5, 1.5, 'S');
         rgb(doc, ...GOLD); rect(doc, ML + 5, ty, 2, tipLines.length * 3.2 + 8);
