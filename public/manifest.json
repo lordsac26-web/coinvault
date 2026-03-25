@@ -7,7 +7,6 @@
   "background_color": "#0a0e1a",
   "theme_color": "#0a0e1a",
   "orientation": "portrait-primary",
-  "categories": ["finance", "lifestyle", "utilities"],
   "icons": [
     {
       "src": "https://media.base44.com/images/public/69b8ede1eb9cf07295a23d87/abdb00771_generated_image.png",
@@ -22,19 +21,6 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
-  "shortcuts": [
-    {
-      "name": "My Collections",
-      "short_name": "Collections",
-      "url": "/dashboard",
-      "description": "View all coin collections"
-    },
-    {
-      "name": "Catalog",
-      "short_name": "Catalog",
-      "url": "/catalog",
-      "description": "Browse all coins"
-    }
-  ]
+  "categories": ["finance", "lifestyle", "utilities"],
+  "screenshots": []
 }

@@ -161,7 +161,7 @@ function CollectionCard({ col, coinCount, onDelete, onUpdated, index }) {
           style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }}
         >
           {col.cover_image ? (
-            <img src={col.cover_image} alt="" className="w-full h-full object-cover" loading="lazy" />
+            <img src={col.cover_image} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
           ) : (
             <svg viewBox="0 0 48 48" fill="none" className="w-12 h-12 opacity-60">
               <circle cx="24" cy="24" r="18" stroke={stroke} strokeWidth="1.5" />
@@ -538,7 +538,8 @@ export default function Dashboard() {
 
       {/* ── Tag filters ─────────────────────────────────────────────────── */}
       {allTags.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="relative mb-5">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex items-center gap-1 flex-shrink-0">
             <Tag className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--cv-text-muted)' }} />
             <span className="text-xs font-medium whitespace-nowrap" style={{ color: 'var(--cv-text-muted)' }}>Filter:</span>
@@ -557,6 +558,9 @@ export default function Dashboard() {
               {activeTag === tag && <X className="w-3 h-3" />}
             </button>
           ))}
+          </div>
+          {/* Right-edge fade hint — signals more tags are scrollable */}
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10" style={{ background: 'linear-gradient(to right, transparent, var(--cv-bg))' }} />
         </div>
       )}
 

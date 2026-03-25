@@ -35,7 +35,7 @@ export default function Layout() {
 
       {/* Desktop nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 hidden md:block" style={{ background: 'var(--cv-bg-nav)', backdropFilter: 'blur(16px)', borderBottom: '1px solid var(--cv-accent-border)' }}>
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14">
+        <div className="max-w-7xl mx-auto px-4 xl:px-6 flex items-center justify-between h-14">
           <Link to="/dashboard" className="flex items-center gap-2.5 group">
             <div className="w-7 h-7 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, var(--cv-accent-dim), var(--cv-accent))' }}>
               <Coins className="w-3.5 h-3.5" style={{ color: 'var(--cv-accent-text)' }} />
@@ -46,9 +46,9 @@ export default function Layout() {
             <GlobalSearch />
             {navItems.map(({ label, path, icon: Icon }) => (
               <Link key={path} to={path}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                className="flex items-center gap-1 px-2 xl:px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
                 style={isActive(path) ? { color: 'var(--cv-accent)', background: 'var(--cv-accent-bg)' } : { color: 'var(--cv-text-secondary)' }}>
-                <Icon className="w-4 h-4" /> {label}
+                <Icon className="w-4 h-4" /> <span className="hidden lg:inline">{label}</span>
               </Link>
             ))}
             <button onClick={toggleSpotWidget}
@@ -103,7 +103,7 @@ export default function Layout() {
             </div>
             <span className="text-[10px] font-medium leading-none" style={{ color: 'var(--cv-accent)' }}>Scan</span>
           </button>
-          {navItems.slice(2, 4).map(({ label, path, icon: Icon }) => (
+          {[navItems[2], navItems[4]].map(({ label, path, icon: Icon }) => (
             <Link key={path} to={path}
               className="flex flex-col items-center gap-0.5 px-2 py-1 min-w-[52px] transition-colors"
               style={{ color: isActive(path) ? 'var(--cv-accent)' : 'var(--cv-text-muted)' }}>

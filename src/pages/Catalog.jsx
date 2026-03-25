@@ -82,10 +82,11 @@ export default function Catalog() {
                 >
                   {coin.obverse_image ? (
                     <img
-                      src={coin.obverse_image}
-                      alt=""
+                      src={coin.obverse_thumb || coin.obverse_image}
+                      alt={`${coin.year} ${coin.denomination}`}
                       className="w-full h-full object-contain p-3"
                       loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <Coins className="w-8 h-8" style={{ color: 'var(--cv-text-faint)' }} />
