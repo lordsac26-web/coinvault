@@ -84,8 +84,8 @@ Deno.serve(async (req) => {
       return Response.json({ updated: 0, message: 'No coins to refresh' });
     }
 
-    // Cap at 20 coins per call to stay within time limits
-    const batch = coins.slice(0, 20);
+    // Cap at 3 coins per call to stay within time limits
+    const batch = coins.slice(0, 3);
     let updated = 0;
     const errors = [];
 

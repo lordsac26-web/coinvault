@@ -10,20 +10,29 @@ export default function PriceGuide() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshResult, setRefreshResult] = useState(null);
 
+  const [refreshProgress, setRefreshProgress] = useState({ done: 0, total: 0 });
+
   const handleRefreshAll = async () => {
     setRefreshing(true);
     setRefreshResult(null);
-    try {
-      const res = await base44.functions.invoke('refreshMarketPrices', { staleOnly: false });
-      setRefreshResult({ success: true, updated: res.data.updated, total: res.data.total });
-      // Reload coins to show updated values
-      const updated = await getCoins();
-      setCoins(updated);
-    } catch (err) {
-      setRefreshResult({ success: false, error: 'Refresh failed. Please try again.' });
-    } finally {
-      setRefreshing(false);
+    const BATCH = 3;
+    const allIds = coins.map(c => c.id);
+    setRefreshProgress({ done: 0, total: allIds.length });
+    let totalUpdated = 0;
+    for (let i = 0; i < allIds.length; i += BATCH) {
+      const batch = allIds.slice(i, i + BATCH);
+      try {
+        const res = await base44.functions.invoke('refreshMarketPrices', { coinIds: batch });
+        totalUpdated += res.data.updated || 0;
+      } catch (err) {
+        // continue with next batch
+      }
+      setRefreshProgress({ done: Math.min(i + BATCH, allIds.length), total: allIds.length });
     }
+    const updated = await getCoins();
+    setCoins(updated);
+    setRefreshResult({ success: true, updated: totalUpdated, total: allIds.length });
+    setRefreshing(false);
   };
 
   useEffect(() => { const load = async () => { const c = await getCoins(); setCoins(c); setLoading(false); }; load(); }, []);
@@ -53,7 +62,7 @@ export default function PriceGuide() {
           style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: '1px solid var(--cv-accent-border)' }}
         >
           <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing…' : 'Refresh All'}
+          {refreshing ? `${refreshProgress.done}/${refreshProgress.total}` : 'Refresh All'}
         </button>
       </div>
 
