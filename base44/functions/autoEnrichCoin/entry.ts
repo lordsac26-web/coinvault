@@ -17,48 +17,38 @@ Deno.serve(async (req) => {
 
     console.log(`[autoEnrich] coinId=${coinId} step=${step}`);
 
-    // Use user-scoped entities first, fall back to service role
-    let coin;
-    try {
-      const list = await base44.entities.Coin.filter({ id: coinId });
-      coin = list[0];
-    } catch (e) {
-      console.log('User-scope filter failed, trying service role...');
-      const list = await base44.asServiceRole.entities.Coin.filter({ id: coinId });
+    // Use payload data if available (entity automation), otherwise fetch via service role
+    let coin = body.data || null;
+    if (!coin) {
+      const list = await base44.asServiceRole.entities.Coin.filter({ created_by: { $exists: true }, id: coinId });
       coin = list[0];
     }
-    
     if (!coin) {
-      console.log('Coin not found: ' + coinId);
-      return Response.json({ error: 'Coin not found' }, { status: 404 });
+      // Retry once after a short delay (race condition on create)
+      await new Promise(r => setTimeout(r, 3000));
+      const allCoins = await base44.asServiceRole.entities.Coin.list('-created_date', 200);
+      coin = allCoins.find(c => c.id === coinId);
+    }
+    if (!coin) {
+      console.log('Coin not found after retry: ' + coinId);
+      return Response.json({ error: `Entity Coin with ID ${coinId} not found` }, { status: 500 });
     }
     console.log(`Found: ${coin.year} ${coin.denomination}`);
 
-    // Helper to update coin
+    // Helper to update coin — always use service role (automation has no user JWT)
     const updateCoin = async (updates) => {
-      try {
-        await base44.entities.Coin.update(coinId, updates);
-      } catch (e) {
-        await base44.asServiceRole.entities.Coin.update(coinId, updates);
-      }
+      await base44.asServiceRole.entities.Coin.update(coinId, updates);
     };
 
-    // Helper to chain next step (fire-and-forget)
+    // Helper to chain next step (fire-and-forget) — pass coin data to avoid refetch race
     const chainNext = (nextStep) => {
-      base44.functions.invoke('autoEnrichCoin', { coinId, step: nextStep })
-        .catch(() => {
-          base44.asServiceRole.functions.invoke('autoEnrichCoin', { coinId, step: nextStep })
-            .catch(e => console.error('Chain failed:', e.message));
-        });
+      base44.asServiceRole.functions.invoke('autoEnrichCoin', { coinId, step: nextStep })
+        .catch(e => console.error('Chain failed:', e.message));
     };
 
     // Helper to call LLM
     const callLLM = async (params) => {
-      try {
-        return await base44.integrations.Core.InvokeLLM(params);
-      } catch (e) {
-        return await base44.asServiceRole.integrations.Core.InvokeLLM(params);
-      }
+      return await base44.asServiceRole.integrations.Core.InvokeLLM(params);
     };
 
     // ── Step 1: AI Grade ──
