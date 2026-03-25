@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getCoinsByCollection, createCoin, deleteCoin, getCoins } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, ArrowLeft, Coins, FileDown, Loader2, ImageIcon, Package } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Coins, FileDown, FileSpreadsheet, Loader2, ImageIcon, Package } from 'lucide-react';
 import CoinFilterBar from '@/components/CoinFilterBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -215,8 +215,6 @@ export default function CollectionView() {
   };
  
   const handleExportPdf = async () => {
-    // FIX: try/catch on PDF export — before, a failed serverless function call
-    // would leave exporting=true and the button permanently disabled/spinning
     setExporting(true);
     try {
       const response = await base44.functions.invoke('exportCollectionPdf', {
@@ -224,17 +222,54 @@ export default function CollectionView() {
         includeThumbnails: exportWithImages,
       });
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      // FIX: Use shared triggerDownload helper — guarantees URL cleanup
       triggerDownload(blob, `${collection?.name || 'collection'}_report.pdf`);
       setShowExport(false);
     } catch (err) {
       console.error('PDF export failed:', err);
-      // TODO: show toast — "PDF generation failed. Please try again."
     } finally {
       setExporting(false);
     }
   };
- 
+
+  const handleExportCsv = () => {
+    const headers = [
+      'Name', 'Year', 'Denomination', 'Country', 'Mint Mark', 'Series',
+      'Composition', 'Weight', 'Diameter', 'User Grade', 'AI Grade',
+      'Purchase Price', 'Purchase Date', 'Where Acquired',
+      'Est. Value', 'Price Trend', 'Tags', 'Storage Location',
+      'Condition Notes', 'Personal Notes', 'Date Added',
+    ];
+    const rows = coins.map(c => [
+      c.set_name || `${c.year || ''} ${c.denomination || ''}`.trim(),
+      c.year || '',
+      c.denomination || '',
+      c.country || '',
+      c.mint_mark || '',
+      c.coin_series || '',
+      c.composition || '',
+      c.weight || '',
+      c.diameter || '',
+      c.user_grade || '',
+      c.ai_grade?.suggested_grade || '',
+      c.purchase_price || '',
+      c.purchase_date || '',
+      c.where_acquired || '',
+      c.market_value?.this_coin_estimated_value || '',
+      c.market_value?.price_trend || '',
+      (c.tags || []).join('; '),
+      c.storage_location || '',
+      c.condition_notes || '',
+      c.personal_notes || '',
+      c.created_date ? new Date(c.created_date).toLocaleDateString() : '',
+    ]);
+    const csv = [headers, ...rows]
+      .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    triggerDownload(blob, `${collection?.name || 'collection'}_coins.csv`);
+    setShowExport(false);
+  };
+
   if (loading) return <PageLoader />;
  
   if (!collection) {
@@ -276,7 +311,7 @@ export default function CollectionView() {
         </div>
  
         <div className="flex items-center gap-2 shrink-0">
-          {/* PDF Export */}
+          {/* Export */}
           <Dialog open={showExport} onOpenChange={setShowExport}>
             <DialogTrigger asChild>
               <Button
@@ -286,30 +321,40 @@ export default function CollectionView() {
                 disabled={coins.length === 0}
               >
                 <FileDown className="w-4 h-4" />
-                <span className="hidden sm:inline">PDF</span>
+                <span className="hidden sm:inline">Export</span>
               </Button>
             </DialogTrigger>
             <DialogContent
               className="mx-4 sm:mx-auto rounded-2xl"
-              style={{
-                background: 'var(--cv-bg-elevated)',
-                border: '1px solid var(--cv-accent-border)',
-                color: 'var(--cv-text)',
-              }}
+              style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}
             >
               <DialogHeader>
-                <DialogTitle
-                  style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}
-                >
-                  Export PDF Report
+                <DialogTitle style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>
+                  Export Collection
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
                 <p className="text-sm" style={{ color: 'var(--cv-text-secondary)' }}>
-                  Generate a PDF report of{' '}
-                  <strong style={{ color: 'var(--cv-text)' }}>{collection?.name}</strong> with{' '}
-                  {coins.length} coin{coins.length !== 1 ? 's' : ''}.
+                  Export <strong style={{ color: 'var(--cv-text)' }}>{collection?.name}</strong> — {coins.length} coin{coins.length !== 1 ? 's' : ''}.
                 </p>
+
+                {/* CSV */}
+                <button
+                  onClick={handleExportCsv}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left"
+                  style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--cv-input-bg)' }}>
+                    <FileSpreadsheet className="w-4 h-4" style={{ color: 'var(--cv-accent)' }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium" style={{ color: 'var(--cv-text)' }}>Download CSV</p>
+                    <p className="text-xs" style={{ color: 'var(--cv-text-muted)' }}>All details, grades &amp; values — opens in Excel / Sheets</p>
+                  </div>
+                  <FileDown className="w-4 h-4" style={{ color: 'var(--cv-text-faint)' }} />
+                </button>
+
+                {/* PDF thumbnail toggle */}
                 <button
                   onClick={() => setExportWithImages(!exportWithImages)}
                   className="w-full flex items-center gap-3 p-3 rounded-xl transition-all"
@@ -318,32 +363,21 @@ export default function CollectionView() {
                     background: exportWithImages ? 'var(--cv-accent-bg)' : 'var(--cv-bg-card)',
                   }}
                 >
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ background: exportWithImages ? 'var(--cv-accent-bg)' : 'var(--cv-input-bg)' }}
-                  >
-                    <ImageIcon
-                      className="w-4 h-4"
-                      style={{ color: exportWithImages ? 'var(--cv-accent)' : 'var(--cv-text-faint)' }}
-                    />
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: exportWithImages ? 'var(--cv-accent-bg)' : 'var(--cv-input-bg)' }}>
+                    <ImageIcon className="w-4 h-4"
+                      style={{ color: exportWithImages ? 'var(--cv-accent)' : 'var(--cv-text-faint)' }} />
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-sm font-medium" style={{ color: 'var(--cv-text)' }}>
-                      Include coin thumbnails
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--cv-text-muted)' }}>
-                      Adds obverse images next to each coin row
-                    </p>
+                    <p className="text-sm font-medium" style={{ color: 'var(--cv-text)' }}>Include thumbnails in PDF</p>
+                    <p className="text-xs" style={{ color: 'var(--cv-text-muted)' }}>Adds obverse images next to each coin row</p>
                   </div>
-                  <div
-                    className="w-10 h-6 rounded-full p-0.5 transition-colors"
-                    style={{ background: exportWithImages ? 'var(--cv-accent-dim)' : 'var(--cv-input-bg)' }}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-full bg-white transition-transform ${exportWithImages ? 'translate-x-4' : 'translate-x-0'}`}
-                    />
+                  <div className="w-10 h-6 rounded-full p-0.5 transition-colors"
+                    style={{ background: exportWithImages ? 'var(--cv-accent-dim)' : 'var(--cv-input-bg)' }}>
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform ${exportWithImages ? 'translate-x-4' : 'translate-x-0'}`} />
                   </div>
                 </button>
+
                 <Button
                   onClick={handleExportPdf}
                   disabled={exporting}
@@ -351,15 +385,15 @@ export default function CollectionView() {
                   style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: 'none' }}
                 >
                   {exporting ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Generating PDF...</>
                   ) : (
-                    <><FileDown className="w-4 h-4" /> Download PDF</>
+                    <><FileDown className="w-4 h-4" /> Download PDF Report</>
                   )}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
- 
+
           <CoinIdentifier collectionId={collectionId} onAdded={load} />
 
           <AddSetDialog collectionId={collectionId} onAdded={load} />
