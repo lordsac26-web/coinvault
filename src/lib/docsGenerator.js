@@ -817,7 +817,7 @@ function addGuideSection(doc, startPage) {
       // Tip
       if (step.tip) {
         let ty = y + 14 + bodyLines.length * 3.5 + 3;
-        rgb(doc, [30, 24, 6]); doc.roundedRect(ML + 5, ty, CW - 10, tipLines.length * 3.2 + 8, 1.5, 1.5, 'F');
+        rgb(doc, 30, 24, 6); doc.roundedRect(ML + 5, ty, CW - 10, tipLines.length * 3.2 + 8, 1.5, 1.5, 'F');
         doc.setDrawColor(...GOLD);
         doc.setLineWidth(0.3);
         doc.roundedRect(ML + 5, ty, CW - 10, tipLines.length * 3.2 + 8, 1.5, 1.5, 'S');
