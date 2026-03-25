@@ -15,6 +15,7 @@ import Settings from '@/pages/Settings';
 import Catalog from '@/pages/Catalog';
 import PriceGuide from '@/pages/PriceGuide';
 import Album from '@/pages/Album';
+import Docs from '@/pages/Docs';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,6 +49,7 @@ const AuthenticatedApp = () => {
         <Route path="/album" element={<Album />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/docs" element={<Docs />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

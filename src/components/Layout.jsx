@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, CircleDollarSign, ScanBarcode, Grid3X3 } from 'lucide-react';
+import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, CircleDollarSign, ScanBarcode, Grid3X3, FileText } from 'lucide-react';
 import SpotPriceWidget from '@/components/SpotPriceWidget';
 import ScanLookup from '@/components/ScanLookup';
 import GlobalSearch from '@/components/GlobalSearch';
@@ -12,6 +12,7 @@ const navItems = [
   { label: 'Prices', path: '/price-guide', icon: TrendingUp },
   { label: 'Album', path: '/album', icon: Grid3X3 },
   { label: 'Settings', path: '/settings', icon: User },
+  { label: 'Docs', path: '/docs', icon: FileText },
 ];
 
 export default function Layout() {
