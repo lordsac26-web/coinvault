@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getCoins } from '@/components/storage';
+import { getCoins, parseEstimatedValue } from '@/components/storage';
 import { base44 } from '@/api/base44Client';
 import { DollarSign, TrendingUp, TrendingDown, Minus, Coins, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -31,7 +31,7 @@ export default function PriceGuide() {
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="w-10 h-10 rounded-full border-4 animate-spin" style={{ borderColor: 'var(--cv-spinner-track)', borderTopColor: 'var(--cv-spinner-head)' }} /></div>;
 
   const valuedCoins = coins.filter(c => c.market_value?.this_coin_estimated_value);
-  const totalValue = valuedCoins.reduce((sum, c) => { const val = parseFloat(c.market_value.this_coin_estimated_value.replace(/[^0-9.]/g, '') || 0); return sum + (isNaN(val) ? 0 : val); }, 0);
+  const totalValue = valuedCoins.reduce((sum, c) => sum + parseEstimatedValue(c.market_value.this_coin_estimated_value), 0);
 
   const TrendIcon = ({ trend }) => {
     if (trend === 'Rising') return <TrendingUp className="w-3.5 h-3.5 text-green-400" />;
