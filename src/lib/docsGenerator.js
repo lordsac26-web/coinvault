@@ -364,18 +364,26 @@ function addAboutSection(doc, startPage) {
 
   y = sectionHeading(doc, y, 'About CoinVault');
 
-  // Intro card
-  rgb(doc, ...DARK_CARD); doc.roundedRect(ML, y, CW, 28, 2, 2, 'F');
-  rgb(doc, ...GOLD); rect(doc, ML, y, 2.5, 28);
-  y += 4;
+  // Intro card — measure text first to size card correctly
+  const introText1 = 'CoinVault is a full-featured coin collection management platform built for serious numismatists. It combines AI-powered grading and market valuation with beautiful organization tools, album-style completion tracking, and professional export capabilities — all accessible from any device, any time.';
+  const introText2 = 'Whether you collect US type coins, world issues, proof sets, bullion, or paper currency, CoinVault provides the same tools that professionals use at major auction houses and coin dealers — in a sleek, intuitive interface designed for daily use.';
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  const introLines1 = doc.splitTextToSize(introText1, CW - 16);
+  const introLines2 = doc.splitTextToSize(introText2, CW - 16);
+  const introCardH = 8 + introLines1.length * 3.8 + 4 + introLines2.length * 3.8 + 6;
+  rgb(doc, ...DARK_CARD); doc.roundedRect(ML, y, CW, introCardH, 2, 2, 'F');
+  rgb(doc, ...GOLD); rect(doc, ML, y, 2.5, introCardH);
   textRgb(doc, ...WHITE);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
-  doc.text('The Premium Numismatic Portfolio', ML + 6, y + 3);
-  y = bodyText(doc, y + 9, 'CoinVault is a full-featured coin collection management platform built for serious numismatists. It combines AI-powered grading and market valuation with beautiful organization tools, album-style completion tracking, and professional export capabilities — all accessible from any device, any time.', CW - 8, MUTED, 8.5);
-  y += 4;
-  y = bodyText(doc, y, 'Whether you collect US type coins, world issues, proof sets, bullion, or paper currency, CoinVault provides the same tools that professionals use at major auction houses and coin dealers — in a sleek, intuitive interface designed for daily use.', CW - 8, MUTED, 8.5);
-  y += 8;
+  doc.text('The Premium Numismatic Portfolio', ML + 7, y + 7);
+  textRgb(doc, ...MUTED);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.text(introLines1, ML + 7, y + 13);
+  doc.text(introLines2, ML + 7, y + 13 + introLines1.length * 3.8 + 4);
+  y += introCardH + 8;
 
   // Features in 2-column grid
   textRgb(doc, ...GOLD);
