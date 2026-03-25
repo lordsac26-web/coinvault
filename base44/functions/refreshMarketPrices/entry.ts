@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     const { coinIds, staleOnly } = await req.json();
 
     // Fetch all user coins, optionally filtered by IDs
-    let coins = await base44.entities.Coin.filter({ created_by: user.email });
+    let coins = await base44.entities.Coin.list();
 
     if (coinIds && coinIds.length > 0) {
       coins = coins.filter(c => coinIds.includes(c.id));
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
 
         const marketValue = await fetchCoinMarketValue(base44, coin);
 
-        await base44.asServiceRole.entities.Coin.update(coin.id, {
+        await base44.entities.Coin.update(coin.id, {
           market_value: marketValue,
           market_value_at: new Date().toISOString(),
         });
