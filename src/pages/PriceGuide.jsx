@@ -1,11 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getCoins } from '@/components/storage';
-import { DollarSign, TrendingUp, TrendingDown, Minus, Coins } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { DollarSign, TrendingUp, TrendingDown, Minus, Coins, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function PriceGuide() {
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshResult, setRefreshResult] = useState(null);
+
+  const handleRefreshAll = async () => {
+    setRefreshing(true);
+    setRefreshResult(null);
+    try {
+      const res = await base44.functions.invoke('refreshMarketPrices', { staleOnly: false });
+      setRefreshResult({ success: true, updated: res.data.updated, total: res.data.total });
+      // Reload coins to show updated values
+      const updated = await getCoins();
+      setCoins(updated);
+    } catch (err) {
+      setRefreshResult({ success: false, error: 'Refresh failed. Please try again.' });
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => { const load = async () => { const c = await getCoins(); setCoins(c); setLoading(false); }; load(); }, []);
 
@@ -22,8 +41,32 @@ export default function PriceGuide() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-      <h1 className="text-xl sm:text-2xl font-bold mb-1.5" style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>Price Guide</h1>
-      <p className="text-xs sm:text-sm mb-5 sm:mb-8" style={{ color: 'var(--cv-text-muted)' }}>Run "Market" on each coin to populate values.</p>
+      <div className="flex items-start justify-between gap-3 mb-5 sm:mb-8">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: 'var(--cv-accent)', fontFamily: "'Playfair Display', Georgia, serif" }}>Price Guide</h1>
+          <p className="text-xs sm:text-sm" style={{ color: 'var(--cv-text-muted)' }}>Live market values via AI-powered search (PCGS, NGC, eBay).</p>
+        </div>
+        <button
+          onClick={handleRefreshAll}
+          disabled={refreshing || coins.length === 0}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all shrink-0 disabled:opacity-50"
+          style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: '1px solid var(--cv-accent-border)' }}
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Refreshing…' : 'Refresh All'}
+        </button>
+      </div>
+
+      {refreshResult && (
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl mb-4 text-sm ${
+          refreshResult.success ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
+        }`}>
+          {refreshResult.success
+            ? <><RefreshCw className="w-3.5 h-3.5 shrink-0" /> Updated {refreshResult.updated} of {refreshResult.total} coin{refreshResult.total !== 1 ? 's' : ''}. Uses AI credits.</>
+            : <><AlertCircle className="w-3.5 h-3.5 shrink-0" /> {refreshResult.error}</>
+          }
+        </div>
+      )}
       <div className="rounded-2xl p-4 sm:p-5 mb-5 sm:mb-8" style={{ border: '1px solid var(--cv-border)', background: 'var(--cv-bg-card)' }}>
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0"><DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" /></div>
