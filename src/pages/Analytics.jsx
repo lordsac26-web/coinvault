@@ -129,7 +129,8 @@ export default function Analytics() {
             >
               By Country
             </h3>
-            <ResponsiveContainer width="100%" height={240}>
+            <div style={{ width: '100%', minHeight: 260 }}>
+            <ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie
                   data={countryData}
@@ -154,6 +155,7 @@ export default function Analytics() {
                 />
               </PieChart>
             </ResponsiveContainer>
+            </div>
           </div>
  
           {/* By Decade — bar chart */}

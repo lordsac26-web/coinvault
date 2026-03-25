@@ -62,17 +62,17 @@ function StatCard({ label, value, icon: Icon, delta, deltaUp, accentColor, iconB
   );
 }
 
-// Activity feed item
-function ActivityItem({ color, text, time }) {
+// Activity feed item — safe text only (no dangerouslySetInnerHTML)
+function ActivityItem({ color, bold, rest, time }) {
   return (
     <div
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
       style={{ background: 'var(--cv-input-bg)' }}
     >
       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-      <p className="text-sm flex-1" style={{ color: 'var(--cv-text)' }}
-        dangerouslySetInnerHTML={{ __html: text }}
-      />
+      <p className="text-sm flex-1 truncate" style={{ color: 'var(--cv-text)' }}>
+        <strong>{bold}</strong>{rest}
+      </p>
       <span className="text-[11px] flex-shrink-0" style={{ color: 'var(--cv-text-faint)' }}>{time}</span>
     </div>
   );
@@ -96,17 +96,28 @@ function BarRow({ label, count, max, color }) {
   );
 }
 
-// Grade badge row
+// Grade badge row — color by prefix so any Sheldon grade is styled
 const GRADE_COLORS = {
-  'MS-65': { bg: '#EEEDFE', color: '#3C3489' },
-  'MS-63': { bg: '#E6F1FB', color: '#0C447C' },
-  'AU-58': { bg: '#EAF3DE', color: '#27500A' },
-  'EF-40': { bg: '#FAEEDA', color: '#633806' },
-  'VF-20': { bg: '#F1EFE8', color: '#444441' },
+  'MS': { bg: '#EEEDFE', color: '#3C3489' },  // Mint State
+  'PF': { bg: '#E6F1FB', color: '#0C447C' },  // Proof
+  'AU': { bg: '#EAF3DE', color: '#27500A' },  // About Uncirculated
+  'EF': { bg: '#FAEEDA', color: '#633806' },  // Extremely Fine
+  'XF': { bg: '#FAEEDA', color: '#633806' },  // Extremely Fine alt
+  'VF': { bg: '#F1EFE8', color: '#444441' },  // Very Fine
+  'F':  { bg: '#F5F0E8', color: '#5a4a30' },  // Fine
+  'VG': { bg: '#EFF5E8', color: '#3a5020' },  // Very Good
+  'G':  { bg: '#E8EEF5', color: '#2a4060' },  // Good
+  'AG': { bg: '#F5E8EE', color: '#602040' },  // About Good
+  'P':  { bg: '#F0EEF5', color: '#443060' },  // Poor
 };
+function getGradeStyle(grade) {
+  if (!grade) return { bg: 'var(--cv-accent-bg)', color: 'var(--cv-accent)' };
+  const prefix = grade.replace(/[-0-9]/g, '');
+  return GRADE_COLORS[prefix] || { bg: 'var(--cv-accent-bg)', color: 'var(--cv-accent)' };
+}
 
 function GradeRow({ grade, count, avgValue }) {
-  const style = GRADE_COLORS[grade] || { bg: 'var(--cv-accent-bg)', color: 'var(--cv-accent)' };
+  const style = getGradeStyle(grade);
   return (
     <div className="flex items-center justify-between py-1.5">
       <span
@@ -276,6 +287,7 @@ export default function Dashboard() {
 
   const load = async () => {
     setLoading(true);
+    setPage(1);
     const [cols, allCoins] = await Promise.all([getCollections(), getCoins()]);
     setCollections(cols);
     setCoins(allCoins);
@@ -334,7 +346,14 @@ export default function Dashboard() {
       .slice(0, 5);
   }, [coins]);
 
-  // Recent activity — last 3 coins added/updated
+  // Pre-build coin count map — O(n) once instead of O(n*m) inside render
+  const coinCountMap = useMemo(() => {
+    const map = {};
+    coins.forEach(c => { map[c.collection_id] = (map[c.collection_id] || 0) + 1; });
+    return map;
+  }, [coins]);
+
+  // Recent activity — last 3 coins added/updated (safe, no HTML)
   const recentActivity = useMemo(() => {
     const ACTIVITY_COLORS = ['#3B6D11', '#534AB7', '#BA7517', '#185FA5', '#0F6E56'];
     return [...coins]
@@ -345,7 +364,8 @@ export default function Dashboard() {
       .slice(0, 3)
       .map((c, i) => ({
         color: ACTIVITY_COLORS[i % ACTIVITY_COLORS.length],
-        text: `<strong>${c.year || ''} ${c.denomination || 'Coin'}</strong> added${c.collection_id ? '' : ''}`,
+        bold: `${c.year || ''} ${c.denomination || 'Coin'}`.trim(),
+        rest: ' added',
         time: timeAgo(c.updated_date || c.created_date),
       }));
   }, [coins]);
@@ -518,16 +538,16 @@ export default function Dashboard() {
 
       {/* ── Tag filters ─────────────────────────────────────────────────── */}
       {allTags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-5">
-          <div className="flex items-center gap-1 mr-1">
-            <Tag className="w-3.5 h-3.5" style={{ color: 'var(--cv-text-muted)' }} />
-            <span className="text-xs font-medium" style={{ color: 'var(--cv-text-muted)' }}>Filter:</span>
+        <div className="flex items-center gap-1.5 mb-5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Tag className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--cv-text-muted)' }} />
+            <span className="text-xs font-medium whitespace-nowrap" style={{ color: 'var(--cv-text-muted)' }}>Filter:</span>
           </div>
           {allTags.map(tag => (
             <button
               key={tag}
               onClick={() => handleTagChange(tag)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex-shrink-0 whitespace-nowrap"
               style={activeTag === tag
                 ? { background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)', border: '1px solid var(--cv-accent)' }
                 : { background: 'var(--cv-bg-card)', color: 'var(--cv-text-secondary)', border: '1px solid var(--cv-border)' }
@@ -565,7 +585,7 @@ export default function Dashboard() {
             <CollectionCard
               key={col.id}
               col={col}
-              coinCount={coins.filter(c => c.collection_id === col.id).length}
+              coinCount={coinCountMap[col.id] || 0}
               onDelete={handleDelete}
               onUpdated={load}
               index={(page - 1) * PAGE_SIZE + i}
@@ -616,7 +636,7 @@ export default function Dashboard() {
             {recentActivity.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {recentActivity.map((a, i) => (
-                  <ActivityItem key={i} color={a.color} text={a.text} time={a.time} />
+                  <ActivityItem key={i} color={a.color} bold={a.bold} rest={a.rest} time={a.time} />
                 ))}
               </div>
             ) : (
