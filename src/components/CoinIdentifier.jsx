@@ -6,7 +6,8 @@ import ImageCropper from '@/components/ImageCropper';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, Loader2, Camera, Check, X, Pencil, Package } from 'lucide-react';
+import { Search, Loader2, Camera, Check, X, Pencil, Package, Info } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const inputStyle = {
   background: 'var(--cv-input-bg)',
@@ -178,9 +179,36 @@ export default function CoinIdentifier({ collectionId, onAdded }) {
                 {error}
               </div>
             )}
-            <p className="text-xs" style={{ color: 'var(--cv-text-muted)' }}>
-              Take or upload photos of both sides. AI will identify the coin and fill in all details.
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs" style={{ color: 'var(--cv-text-muted)' }}>
+                Take or upload photos of both sides. AI will identify the coin and fill in all details.
+              </p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors shrink-0 ml-2"
+                    style={{ color: 'var(--cv-accent)', background: 'var(--cv-accent-bg)', border: '1px solid var(--cv-accent-border)' }}>
+                    <Info className="w-3 h-3" /> Tips
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 text-xs space-y-2 p-4 rounded-xl"
+                  style={{ background: 'var(--cv-bg-elevated)', border: '1px solid var(--cv-accent-border)', color: 'var(--cv-text)' }}>
+                  <p className="font-semibold text-sm" style={{ color: 'var(--cv-accent)' }}>Photo Tips for Best Results</p>
+                  {[
+                    ['Lighting', 'Use natural diffused light or a lamp at a 45 degree angle. Avoid direct flash which causes glare.'],
+                    ['Background', 'Place coin on a dark, non-reflective surface to maximize contrast.'],
+                    ['Focus', 'Hold camera steady or use a stand. Tap the coin on your screen to set focus point.'],
+                    ['Distance', 'Fill the frame — coin should take up 70-80% of the photo.'],
+                    ['Both Sides', 'Capture the obverse (front/heads) and reverse (back/tails) for accurate identification.'],
+                    ['Clean First', 'Gently remove loose debris with a soft brush before photographing — never rub or clean a coin for grading purposes.'],
+                  ].map(([title, tip]) => (
+                    <div key={title}>
+                      <span className="font-semibold" style={{ color: 'var(--cv-text)' }}>{title}: </span>
+                      <span style={{ color: 'var(--cv-text-secondary)' }}>{tip}</span>
+                    </div>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <PhotoUploadSlot label="Obverse (Front)" file={obverseFile} onSelect={f => handleFileSelect('obverse', f)} />
               <PhotoUploadSlot label="Reverse (Back)" file={reverseFile} onSelect={f => handleFileSelect('reverse', f)} />

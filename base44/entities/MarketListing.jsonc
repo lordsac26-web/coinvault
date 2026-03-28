@@ -1,0 +1,70 @@
+{
+  "name": "MarketListing",
+  "type": "object",
+  "properties": {
+    "listing_type": {
+      "type": "string",
+      "enum": [
+        "sell",
+        "want"
+      ],
+      "description": "Whether user is selling or looking for this coin"
+    },
+    "coin_name": {
+      "type": "string",
+      "description": "Descriptive name of the coin"
+    },
+    "year": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "denomination": {
+      "type": "string"
+    },
+    "grade": {
+      "type": "string"
+    },
+    "composition": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "asking_price": {
+      "type": "string",
+      "description": "Price or 'Make Offer'"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Photo of the coin"
+    },
+    "seller_name": {
+      "type": "string"
+    },
+    "seller_email": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "listing_type",
+    "coin_name"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {},
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

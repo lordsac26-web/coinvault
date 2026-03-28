@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, CircleDollarSign, ScanBarcode, Grid3X3, FileText } from 'lucide-react';
+import { Coins, LayoutGrid, BookOpen, TrendingUp, BarChart3, User, CircleDollarSign, ScanBarcode, Grid3X3, FileText, ShoppingBag, MessageSquare } from 'lucide-react';
 import SpotPriceWidget from '@/components/SpotPriceWidget';
+import MessageInbox from '@/components/MessageInbox';
+import { base44 } from '@/api/base44Client';
 import ScanLookup from '@/components/ScanLookup';
 import GlobalSearch from '@/components/GlobalSearch';
 
@@ -11,6 +13,7 @@ const navItems = [
   { label: 'Analytics', path: '/analytics', icon: BarChart3 },
   { label: 'Prices', path: '/price-guide', icon: TrendingUp },
   { label: 'Album', path: '/album', icon: Grid3X3 },
+  { label: 'Exchange', path: '/marketplace', icon: ShoppingBag },
   { label: 'Settings', path: '/settings', icon: User },
   { label: 'Docs', path: '/docs', icon: FileText },
 ];
@@ -19,7 +22,20 @@ export default function Layout() {
   const location = useLocation();
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
   const [showSpotWidget, setShowSpotWidget] = useState(() => localStorage.getItem('spotWidgetEnabled') === 'true');
-  const [showScanner, setShowScanner] = useState(false);
+  const [showInbox, setShowInbox] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    base44.auth.me().then(u => {
+      setCurrentUser(u);
+      if (u?.email) {
+        base44.entities.Message.filter({ to_email: u.email, is_read: false }, '-created_date', 50)
+          .then(msgs => setUnreadCount(msgs.length))
+          .catch(() => {});
+      }
+    }).catch(() => {});
+  }, []);
 
   const toggleSpotWidget = () => {
     const next = !showSpotWidget;
@@ -56,6 +72,14 @@ export default function Layout() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ml-1"
               style={showSpotWidget ? { color: 'var(--cv-accent)', background: 'var(--cv-accent-bg)' } : { color: 'var(--cv-text-secondary)' }}>
               <CircleDollarSign className="w-4 h-4" /> Spot
+            </button>
+            <button onClick={() => setShowInbox(true)}
+              className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ml-1"
+              style={{ color: 'var(--cv-text-secondary)' }}>
+              <MessageSquare className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center bg-red-500 text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>
+              )}
             </button>
           </div>
         </div>
@@ -116,6 +140,7 @@ export default function Layout() {
       </nav>
 
       {showSpotWidget && <SpotPriceWidget onClose={toggleSpotWidget} />}
+      {showInbox && currentUser && <MessageInbox currentUser={currentUser} onClose={() => { setShowInbox(false); setUnreadCount(0); }} />}
       {showScanner && <ScanLookup onClose={() => setShowScanner(false)} />}
 
       <main className="pt-12 md:pt-14 pb-24 md:pb-0 relative z-10">

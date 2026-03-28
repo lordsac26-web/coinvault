@@ -1,0 +1,52 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "listing_id": {
+      "type": "string",
+      "description": "Reference to MarketListing"
+    },
+    "listing_title": {
+      "type": "string",
+      "description": "Snapshot of listing name for display"
+    },
+    "from_email": {
+      "type": "string"
+    },
+    "from_name": {
+      "type": "string"
+    },
+    "to_email": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "Groups replies together"
+    }
+  },
+  "required": [
+    "to_email",
+    "body",
+    "from_email"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {},
+    "update": {},
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}
