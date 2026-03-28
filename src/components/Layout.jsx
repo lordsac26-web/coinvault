@@ -22,6 +22,7 @@ export default function Layout() {
   const location = useLocation();
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
   const [showSpotWidget, setShowSpotWidget] = useState(() => localStorage.getItem('spotWidgetEnabled') === 'true');
+  const [showScanner, setShowScanner] = useState(false);
   const [showInbox, setShowInbox] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
