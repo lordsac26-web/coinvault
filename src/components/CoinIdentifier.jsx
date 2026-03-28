@@ -3,10 +3,11 @@ import { base44 } from '@/api/base44Client';
 import { identifyCoin } from '@/components/coinAI';
 import { createCoin } from '@/components/storage';
 import ImageCropper from '@/components/ImageCropper';
+import BulkCoinIdentifier from '@/components/BulkCoinIdentifier';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, Loader2, Camera, Check, X, Pencil, Package, Info } from 'lucide-react';
+import { Search, Loader2, Camera, Check, X, Pencil, Package, Info, Grid3X3, Coins } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const inputStyle = {
@@ -62,6 +63,7 @@ function ResultField({ label, value, editValue, onChange }) {
 
 export default function CoinIdentifier({ collectionId, onAdded }) {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState(null); // null | 'single' | 'grid'
   const [step, setStep] = useState('upload'); // upload | cropping | analyzing | review
   const [obverseFile, setObverseFile] = useState(null);
   const [reverseFile, setReverseFile] = useState(null);
@@ -142,6 +144,7 @@ export default function CoinIdentifier({ collectionId, onAdded }) {
 
   const resetAndClose = () => {
     setOpen(false);
+    setMode(null);
     setStep('upload');
     setObverseFile(null);
     setReverseFile(null);
@@ -172,7 +175,49 @@ export default function CoinIdentifier({ collectionId, onAdded }) {
           </DialogTitle>
         </DialogHeader>
 
-        {step === 'upload' && (
+        {/* Mode selection */}
+        {!mode && (
+          <div className="space-y-4 mt-2">
+            <p className="text-xs text-center" style={{ color: 'var(--cv-text-muted)' }}>
+              How many coins do you want to identify?
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setMode('single')}
+                className="flex flex-col items-center gap-3 p-5 rounded-2xl transition-all text-left"
+                style={{ border: '2px solid var(--cv-accent-border)', background: 'var(--cv-accent-bg)' }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--cv-accent-dim)' }}>
+                  <Coins className="w-6 h-6" style={{ color: 'var(--cv-accent-text)' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: 'var(--cv-accent)' }}>Single Coin</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--cv-text-muted)' }}>Identify one coin at a time with obverse &amp; reverse photos</p>
+                </div>
+              </button>
+              <button onClick={() => setMode('grid')}
+                className="flex flex-col items-center gap-3 p-5 rounded-2xl transition-all text-left"
+                style={{ border: '2px solid var(--cv-accent-border)', background: 'var(--cv-accent-bg)' }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--cv-accent-dim)' }}>
+                  <Grid3X3 className="w-6 h-6" style={{ color: 'var(--cv-accent-text)' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: 'var(--cv-accent)' }}>Grid (2–10)</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--cv-text-muted)' }}>Photograph a tray of coins in a grid and identify them all at once</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Grid mode — delegate entirely to BulkCoinIdentifier */}
+        {mode === 'grid' && (
+          <BulkCoinIdentifier
+            collectionId={collectionId}
+            onAdded={() => { resetAndClose(); onAdded(); }}
+            onBack={() => setMode(null)}
+          />
+        )}
+
+        {mode === 'single' && step === 'upload' && (
           <div className="space-y-4 mt-2">
             {error && (
               <div className="rounded-xl p-3 text-xs" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
@@ -218,16 +263,20 @@ export default function CoinIdentifier({ collectionId, onAdded }) {
               style={{ background: 'var(--cv-accent-dim)', color: 'var(--cv-accent-text)' }}>
               <Search className="w-4 h-4" /> Identify This Coin
             </Button>
+            <button onClick={() => setMode(null)}
+              className="w-full text-xs text-center py-1" style={{ color: 'var(--cv-text-faint)' }}>
+              ← Back to mode selection
+            </button>
           </div>
         )}
 
-        {step === 'cropping' && cropFile && (
+        {mode === 'single' && step === 'cropping' && cropFile && (
           <ImageCropper file={cropFile} onCropped={handleCropped}
             onCancel={() => { setCropFile(null); setCropTarget(null); setStep('upload'); }}
             initialShape="circle" />
         )}
 
-        {step === 'analyzing' && (
+        {mode === 'single' && step === 'analyzing' && (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--cv-accent)' }} />
             <div className="text-center">
@@ -239,7 +288,7 @@ export default function CoinIdentifier({ collectionId, onAdded }) {
           </div>
         )}
 
-        {step === 'review' && result && (
+        {mode === 'single' && step === 'review' && result && (
           <div className="space-y-4 mt-2">
             {/* Identification summary */}
             <div className="rounded-xl p-3" style={{ background: 'var(--cv-accent-bg)', border: '1px solid var(--cv-accent-border)' }}>
