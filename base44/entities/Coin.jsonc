@@ -1,0 +1,158 @@
+{
+  "name": "Coin",
+  "type": "object",
+  "properties": {
+    "collection_id": {
+      "type": "string",
+      "description": "Reference to parent collection"
+    },
+    "entry_type": {
+      "type": "string",
+      "enum": [
+        "coin",
+        "proof_set",
+        "mint_set",
+        "bullion",
+        "roll",
+        "commemorative",
+        "paper_currency"
+      ],
+      "default": "coin",
+      "description": "Type of collectible item"
+    },
+    "set_name": {
+      "type": "string",
+      "description": "Name of the set or item"
+    },
+    "set_images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Photos of the item (front, back, packaging)"
+    },
+    "set_contents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "denomination": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "AI-identified coins within a set or roll"
+    },
+    "country": {
+      "type": "string"
+    },
+    "denomination": {
+      "type": "string"
+    },
+    "year": {
+      "type": "string"
+    },
+    "year_unknown": {
+      "type": "boolean",
+      "default": false
+    },
+    "mint_mark": {
+      "type": "string",
+      "default": "None"
+    },
+    "coin_series": {
+      "type": "string"
+    },
+    "composition": {
+      "type": "string"
+    },
+    "diameter": {
+      "type": "string"
+    },
+    "weight": {
+      "type": "string"
+    },
+    "user_grade": {
+      "type": "string"
+    },
+    "obverse_image": {
+      "type": "string",
+      "description": "URL to obverse image"
+    },
+    "reverse_image": {
+      "type": "string",
+      "description": "URL to reverse image"
+    },
+    "obverse_thumb": {
+      "type": "string",
+      "description": "URL to obverse thumbnail (small)"
+    },
+    "reverse_thumb": {
+      "type": "string",
+      "description": "URL to reverse thumbnail (small)"
+    },
+    "purchase_price": {
+      "type": "string"
+    },
+    "purchase_date": {
+      "type": "string"
+    },
+    "where_acquired": {
+      "type": "string",
+      "default": "Dealer"
+    },
+    "condition_notes": {
+      "type": "string"
+    },
+    "personal_notes": {
+      "type": "string"
+    },
+    "storage_location": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ai_grade": {
+      "type": "object",
+      "description": "AI grading result JSON"
+    },
+    "enrichment": {
+      "type": "object",
+      "description": "AI enrichment data JSON"
+    },
+    "enriched_at": {
+      "type": "string"
+    },
+    "market_value": {
+      "type": "object",
+      "description": "Market value data JSON"
+    },
+    "market_value_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "collection_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

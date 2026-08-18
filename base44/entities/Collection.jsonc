@@ -1,0 +1,66 @@
+{
+  "name": "Collection",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Collection name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "By Country",
+        "By Type",
+        "By Era",
+        "By Series",
+        "By Metal",
+        "Proof Sets",
+        "Mint Sets",
+        "Bullion",
+        "Rolls",
+        "Commemoratives",
+        "Paper Currency",
+        "Custom"
+      ],
+      "default": "Custom",
+      "description": "Collection classification"
+    },
+    "target_goal": {
+      "type": "string",
+      "description": "Target goal for this collection"
+    },
+    "cover_image": {
+      "type": "string",
+      "description": "URL to cover image"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "AI-generated and user-managed tags for filtering"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

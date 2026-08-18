@@ -1,0 +1,49 @@
+{
+  "name": "UserSettings",
+  "type": "object",
+  "properties": {
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "default_country": {
+      "type": "string"
+    },
+    "ai_auto_enrich": {
+      "type": "boolean",
+      "default": true
+    },
+    "price_auto_refresh": {
+      "type": "boolean",
+      "default": false
+    },
+    "default_theme": {
+      "type": "string",
+      "description": "User's saved default theme key"
+    },
+    "github_api_key": {
+      "type": "string",
+      "description": "User's GitHub Models API key for AI features"
+    },
+    "last_ai_call_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp of the user's most recent AI action call, used for rate limiting"
+    }
+  },
+  "required": [],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}
